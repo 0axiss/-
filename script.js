@@ -303,6 +303,9 @@ function saveAllReservations(list) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
         updateHeaderBadge();
+        if (typeof pushReservationsToCloud === "function") {
+            pushReservationsToCloud(list);
+        }
     } catch (e) {
         console.error("저장소 쓰기 오류:", e);
         showToast("예약 데이터 저장에 실패했습니다.", "error");
@@ -2413,6 +2416,9 @@ function saveAllBoardPosts(posts) {
     try {
         localStorage.setItem(BOARD_STORAGE_KEY, JSON.stringify(posts));
         updateBoardBadges();
+        if (typeof pushBoardPostsToCloud === "function") {
+            pushBoardPostsToCloud(posts);
+        }
     } catch (e) {
         console.error("게시판 데이터 저장 오류:", e);
     }

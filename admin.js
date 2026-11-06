@@ -400,6 +400,9 @@ function saveAllReservations(list) {
     }
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        if (typeof pushReservationsToCloud === "function") {
+            pushReservationsToCloud(list);
+        }
         return true;
     } catch (e) {
         console.error("예약 데이터 저장 오류:", e);
@@ -421,6 +424,9 @@ function getRoomSettings() {
 function saveRoomSettings(settings) {
     if (!checkAdminAuth()) return false;
     localStorage.setItem(ROOM_SETTINGS_KEY, JSON.stringify(settings));
+    if (typeof pushRoomSettingsToCloud === "function") {
+        pushRoomSettingsToCloud(settings);
+    }
     return true;
 }
 
@@ -444,6 +450,9 @@ function getBookingPolicies() {
 function saveBookingPolicies(policies) {
     if (!checkAdminAuth()) return false;
     localStorage.setItem(POLICIES_KEY, JSON.stringify(policies));
+    if (typeof pushPoliciesToCloud === "function") {
+        pushPoliciesToCloud(policies);
+    }
     return true;
 }
 
@@ -1540,6 +1549,9 @@ function saveAdminBoardPosts(posts) {
     }
     localStorage.setItem(BOARD_STORAGE_KEY, JSON.stringify(posts));
     updateAdminBoardBadges();
+    if (typeof pushBoardPostsToCloud === "function") {
+        pushBoardPostsToCloud(posts);
+    }
     return true;
 }
 

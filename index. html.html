@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>총신대학교 교회음악과 연습실 예약 시스템</title>
+    <meta name="description" content="총신대학교 교회음악과 학생들을 위한 온라인 연습실 실시간 예약 및 현황 조회 시스템">
+
+    <!-- Pretendard & Inter Web Fonts -->
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css?v=20261022_adminmatch">
+</head>
+
+<body>
+    <div id="app-container">
+
+        <!-- Global App Header -->
+        <header class="app-header">
+            <div class="header-inner">
+                <div class="brand" onclick="navTo('building-screen')">
+                    <div class="brand-crest">
+                        <img src="logo.png" alt="총신대학교 로고" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                            stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                            <path d="M9 18V5l12-2v13"></path>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <circle cx="18" cy="16" r="3"></circle>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="univ-tag">CHONGSHIN UNIVERSITY</span>
+                        <h1 class="dept-title">교회음악과 연습실 예약</h1>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <a href="admin.html" class="header-util-btn" title="관리자 시스템 접속" style="text-decoration:none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </a>
+                    <button class="header-util-btn" id="btn-quick-my-res" onclick="navTo('my-screen')" title="내 예약 확인">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span class="my-badge" id="my-badge-count" style="display:none;">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Operating Status Banner -->
+            <div class="notice-bar">
+                <span class="notice-pulse"></span>
+                <span class="notice-text">운영시간: <strong>09:00 ~ 22:00</strong> · 30분 단위 · 매일 새벽 05:00 오픈</span>
+            </div>
+        </header>
+
+        <!-- App Content Wrapper -->
+        <div class="content-wrapper">
+
+            <!-- SCREEN 1: 건물 선택 (Building Screen) -->
+            <section id="building-screen" class="view-screen active">
+                <div class="section-hero">
+                    <h2 class="hero-title">이용하실 건물을 선택해주세요</h2>
+                    <p class="hero-desc">예약할 연습실이 위치한 건물을 선택하세요.</p>
+                </div>
+
+                <div class="building-grid">
+                    <!-- 신관 카드 -->
+                    <div class="building-card" onclick="selectBuilding('신관')">
+                        <div class="bcard-body">
+                            <div class="bcard-info">
+                                <h3 class="bcard-title">신관</h3>
+                                <p class="bcard-subtitle">지하 1층 · 5층 · 6층</p>
+                            </div>
+                            <div class="bcard-meta">
+                                <span class="bcard-count-badge">33개실</span>
+                                <div class="circle-arrow">›</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 종합관 카드 -->
+                    <div class="building-card" onclick="selectBuilding('종합관')">
+                        <div class="bcard-body">
+                            <div class="bcard-info">
+                                <h3 class="bcard-title">종합관</h3>
+                                <p class="bcard-subtitle">2층 (1호 ~ 12호)</p>
+                            </div>
+                            <div class="bcard-meta">
+                                <span class="bcard-count-badge">12개실</span>
+                                <div class="circle-arrow">›</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Cards -->
+                <div class="quick-cards-grid">
+                    <div class="quick-card" onclick="navTo('overview-screen')">
+                        <div class="qc-icon">📊</div>
+                        <div class="qc-text">
+                            <strong>전체 연습실 현황판</strong>
+                            <span>실시간 예약 현황 한눈에 비교</span>
+                        </div>
+                        <div class="qc-arrow">›</div>
+                    </div>
+                    <div class="quick-card" onclick="navTo('my-screen')">
+                        <div class="qc-icon">🔍</div>
+                        <div class="qc-text">
+                            <strong>내 예약 조회 및 취소</strong>
+                            <span>학번으로 간편하게 조회/취소</span>
+                        </div>
+                        <div class="qc-arrow">›</div>
+                    </div>
+                    <div class="quick-card" onclick="navTo('board-screen')">
+                        <div class="qc-icon">📢</div>
+                        <div class="qc-text">
+                            <strong>연습실 소통 게시판</strong>
+                            <span>공지사항 및 실명 문의 작성</span>
+                        </div>
+                        <div class="qc-arrow">›</div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SCREEN 2: 층 및 연습실 선택 (Room List Screen) -->
+            <section id="room-screen" class="view-screen">
+                <div class="view-top-nav">
+                    <button class="nav-back-btn" onclick="navTo('building-screen')" title="뒤로가기">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="nav-title-group">
+                        <span class="nav-subtitle">건물 선택</span>
+                        <h2 class="nav-main-title" id="room-screen-building-name">신관</h2>
+                    </div>
+                    <button class="nav-extra-btn" onclick="openOverviewForCurrentBuilding()" title="이 건물 전체 현황">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Floor Filter Tabs (Sticky) -->
+                <div class="floor-tabs-scroll" id="floor-tabs-container">
+                    <!-- Injected via JavaScript -->
+                </div>
+
+                <!-- Rooms by Floor Container -->
+                <div class="rooms-container" id="rooms-container">
+                    <!-- Injected via JavaScript -->
+                </div>
+            </section>
+
+
+            <!-- SCREEN 3: 날짜/시간 선택 및 예약 (Time & Booking Screen) -->
+            <section id="time-screen" class="view-screen">
+                <div class="view-top-nav">
+                    <button class="nav-back-btn" onclick="navTo('room-screen')" title="연습실 목록">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="nav-title-group">
+                        <span class="nav-subtitle" id="time-screen-nav-sub">신관 · B1</span>
+                        <h2 class="nav-main-title" id="time-screen-room-name">B12호</h2>
+                    </div>
+                    <button class="nav-extra-btn text-btn" onclick="openRoomStatusScreen()">
+                        <span>현황</span>
+                    </button>
+                </div>
+
+                <div class="room-hero-card" id="room-hero-card">
+                    <div class="rh-left">
+                        <span class="rh-tag" id="rh-type-tag">교음(오르간)</span>
+                        <h3 class="rh-name" id="rh-room-title">B12호 연습실</h3>
+                        <p class="rh-info" id="rh-floor-info">신관 지하 1층 · 파이프/전자 오르간 구비</p>
+                    </div>
+                    <div class="rh-right">
+                        <div class="status-pill available" id="rh-live-status">이용 가능</div>
+                    </div>
+                </div>
+
+                <!-- Date Selector Bar -->
+                <div class="date-navigator-card">
+                    <button class="dn-btn" onclick="changeDate(-1)" title="이전 날짜">‹</button>
+                    <div class="dn-center" onclick="triggerDatePicker()">
+                        <div class="dn-date-row">
+                            <strong id="dn-display-date">2026.10.15</strong>
+                            <span class="dn-day-badge" id="dn-display-day">목요일</span>
+                        </div>
+                        <span class="dn-hint">📅 터치하여 다른 날짜 선택</span>
+                        <input type="date" id="native-date-input"
+                            style="position:absolute; opacity:0; pointer-events:none; width:1px; height:1px;">
+                    </div>
+                    <button class="dn-btn" onclick="changeDate(1)" title="다음 날짜">›</button>
+                </div>
+
+                <!-- Dropdown / Manual Time Selector (Time Setting Card) -->
+                <div class="manual-time-card">
+                    <div class="mt-header">
+                        <span class="mt-icon">⏱️</span>
+                        <strong>선택된 이용 시간</strong>
+                    </div>
+                    <div class="time-picker-row">
+                        <div class="tp-col">
+                            <label for="start-time-select">시작 시간</label>
+                            <select id="start-time-select" class="tp-select" onchange="onStartTimeChange()">
+                                <!-- Generated by JS -->
+                            </select>
+                        </div>
+                        <div class="tp-divider">~</div>
+                        <div class="tp-col">
+                            <label for="end-time-select">종료 시간</label>
+                            <select id="end-time-select" class="tp-select" onchange="onEndTimeChange()">
+                                <!-- Generated by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Duration Banner -->
+                    <div class="duration-summary-box" id="duration-summary-box">
+                        <div class="dsb-info">
+                            <span class="dsb-label">이용 예정 시간</span>
+                            <strong class="dsb-time" id="dsb-time-text">09:00 ~ 10:30 (총 1시간 30분)</strong>
+                        </div>
+                        <span class="dsb-badge" id="dsb-status-badge">선택 완료</span>
+                    </div>
+                </div>
+
+                <!-- Slot Legend -->
+                <div class="slot-legend-bar">
+                    <div class="legend-item"><span class="dot dot-avail"></span><span>예약 가능</span></div>
+                    <div class="legend-item"><span class="dot dot-selected"></span><span>선택 중</span></div>
+                    <div class="legend-item"><span class="dot dot-reserved"></span><span>예약 완료</span></div>
+                </div>
+
+                <!-- Interactive Visual Timetable Schedule -->
+                <div class="slots-section">
+                    <div class="slots-header">
+                        <div class="slots-header-text">
+                            <h4>📅 연습실 예약 타임테이블</h4>
+                            <span class="slots-guide-text">30분 단위 버튼 터치 (최대 4개 / 2시간까지 선택)</span>
+                        </div>
+                        <span class="tt-avail-counter" id="tt-avail-counter">26개 슬롯 예약 가능</span>
+                    </div>
+
+                    <div class="slots-grid" id="slots-grid">
+                        <!-- Hourly timetable blocks dynamically rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Floating Booking Bar -->
+                <div class="bottom-action-bar">
+                    <button class="btn-primary-reserve" id="btn-proceed-reserve" onclick="openReservationModal()">
+                        <span class="btn-text">이 시간으로 예약 신청하기</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+
+
+            <!-- SCREEN 4: 해당 방 예약 현황 (Room Status Screen) -->
+            <section id="room-status-screen" class="view-screen">
+                <div class="view-top-nav">
+                    <button class="nav-back-btn" onclick="navTo('time-screen')" title="예약 화면으로">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="nav-title-group">
+                        <span class="nav-subtitle" id="status-nav-sub">신관 · B12호</span>
+                        <h2 class="nav-main-title">예약 현황</h2>
+                    </div>
+                </div>
+
+                <div class="status-date-bar">
+                    <button class="dn-btn" onclick="changeStatusDate(-1)">‹</button>
+                    <div class="status-date-info">
+                        <strong id="status-date-text">2026.10.15</strong>
+                        <span id="status-day-text">목요일</span>
+                    </div>
+                    <button class="dn-btn" onclick="changeStatusDate(1)">›</button>
+                </div>
+
+                <!-- View Toggle: 리스트 / 타임라인 -->
+                <div class="view-toggle-bar">
+                    <button class="toggle-btn active" id="btn-view-timeline" onclick="switchStatusView('timeline')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="20" x2="12" y2="10"></line>
+                            <line x1="18" y1="20" x2="18" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="16"></line>
+                        </svg>
+                        <span>타임라인 뷰</span>
+                    </button>
+                    <button class="toggle-btn" id="btn-view-list" onclick="switchStatusView('list')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                        <span>목록 뷰</span>
+                    </button>
+                </div>
+
+                <!-- Timeline Content Container -->
+                <div id="status-timeline-container" class="timeline-wrapper">
+                    <!-- Time axis and booked bars rendered here -->
+                </div>
+
+                <!-- List Content Container -->
+                <div id="status-list-container" class="status-cards-container" style="display:none;">
+                    <!-- Reservation items rendered here -->
+                </div>
+            </section>
+
+
+            <!-- SCREEN 5: 전체 연습실 종합 현황판 (Overview Screen) -->
+            <section id="overview-screen" class="view-screen">
+                <div class="view-top-nav">
+                    <button class="nav-back-btn" onclick="navTo('building-screen')" title="홈으로">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="nav-title-group">
+                        <span class="nav-subtitle">실시간 대시보드</span>
+                        <h2 class="nav-main-title">전체 연습실 현황판</h2>
+                    </div>
+                </div>
+
+                <div class="overview-filter-bar">
+                    <div class="segmented-control">
+                        <button class="seg-btn active" id="seg-shingwan" onclick="setOverviewBuilding('신관')">신관
+                            (33실)</button>
+                        <button class="seg-btn" id="seg-jonghap" onclick="setOverviewBuilding('종합관')">종합관 (12실)</button>
+                    </div>
+                </div>
+
+                <!-- Date selector for Overview -->
+                <div class="overview-date-card">
+                    <button class="dn-btn sm" onclick="changeOverviewDate(-1)">‹</button>
+                    <div class="dn-date-row">
+                        <strong id="overview-date-text">2026.10.15</strong>
+                        <span class="dn-day-badge sm" id="overview-day-text">목요일</span>
+                    </div>
+                    <button class="dn-btn sm" onclick="changeOverviewDate(1)">›</button>
+                </div>
+
+                <!-- Overall stats pill -->
+                <div class="overview-stats-row" id="overview-stats-row">
+                    <div class="stat-pill">전체 <strong>0</strong>실</div>
+                    <div class="stat-pill avail">지금 예약가능 <strong>0</strong>실</div>
+                    <div class="stat-pill reserved">예약 중 <strong>0</strong>건</div>
+                </div>
+
+                <div class="overview-rooms-list" id="overview-rooms-list">
+                    <!-- Grouped by floor with full mini schedule bar -->
+                </div>
+            </section>
+
+
+            <!-- SCREEN 6: 내 예약 확인 및 취소 (My Reservations Screen) -->
+            <section id="my-screen" class="view-screen">
+                <div class="view-top-nav">
+                    <button class="nav-back-btn" onclick="navTo('building-screen')" title="홈으로">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="nav-title-group">
+                        <span class="nav-subtitle">예약 관리</span>
+                        <h2 class="nav-main-title">내 예약 조회 및 취소</h2>
+                    </div>
+                </div>
+
+                <!-- Student ID Search Box -->
+                <div class="search-card">
+                    <label for="search-student-id">학번 또는 전화번호로 간편 조회</label>
+                    <div class="search-input-group">
+                        <input type="text" id="search-student-id" placeholder="학번 입력 (예: 20241234) 또는 연락처"
+                            autocomplete="off">
+                        <button class="search-btn" onclick="searchMyReservations()">조회</button>
+                    </div>
+                    <p class="search-tip">💡 예약 시 입력하셨던 학번이나 전화번호를 입력하시면 예약 내역을 즉시 확인하고 취소할 수 있습니다.</p>
+                </div>
+
+                <!-- Results container -->
+                <div class="my-res-container" id="my-res-container">
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <h4>조회된 예약 내역이 없습니다</h4>
+                        <p>위 입력창에 본인의 학번을 입력하고 [조회]를 눌러주세요.</p>
+                    </div>
+                </div>
+
+                <!-- Quick Data Management & Reset (Helpful for testing) -->
+                <div class="data-mgmt-card">
+                    <div class="dm-header">
+                        <span>⚙️ 데이터 관리 및 테스트</span>
+                    </div>
+                    <div class="dm-buttons">
+                        <button class="dm-btn" onclick="generateSampleData()">샘플 예약 데이터 생성</button>
+                        <button class="dm-btn danger" onclick="resetAllReservations()">전체 예약 초기화</button>
+                        <button class="dm-btn" onclick="exportReservationsJSON()">예약 데이터 백업(JSON)</button>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SCREEN 7: 연습실 소통 게시판 (공지 & 문의) -->
+            <section id="board-screen" class="view-screen">
+                <div class="view-top-nav">
+                    <button class="nav-back-btn" onclick="navTo('building-screen')" title="뒤로가기">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="nav-title-group">
+                        <span class="nav-subtitle">총신대학교 교회음악과</span>
+                        <h2 class="nav-main-title">연습실 게시판</h2>
+                    </div>
+                    <button class="nav-extra-btn" onclick="refreshBoardPosts()" title="새로고침">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="18" height="18">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- 게시판 카테고리 탭 (공지게시판 / 문의게시판) -->
+                <div class="board-category-tabs">
+                    <button class="bcat-btn active" id="bcat-notice" onclick="switchBoardCategory('notice')">
+                        <span class="bcat-icon">📢</span>
+                        <span class="bcat-title">공지게시판</span>
+                        <span class="bcat-badge" id="bcat-notice-count">0</span>
+                    </button>
+                    <button class="bcat-btn" id="bcat-inquiry" onclick="switchBoardCategory('inquiry')">
+                        <span class="bcat-icon">💬</span>
+                        <span class="bcat-title">문의게시판</span>
+                        <span class="bcat-badge" id="bcat-inquiry-count">0</span>
+                    </button>
+                </div>
+
+                <!-- 탭별 안내 문구 및 단일 글쓰기 버튼 바 -->
+                <div class="board-sub-bar" id="board-sub-bar">
+                    <div class="bsb-info" id="bsb-info-text">
+                        <span class="bsb-icon">📌</span>
+                        <span>학과 관리실 공식 공지사항</span>
+                    </div>
+                    <button class="btn-write-inquiry" id="btn-write-inquiry" onclick="openInquiryModal()" style="display:none;">
+                        <span>✏️ 문의글 작성</span>
+                    </button>
+                </div>
+
+                <!-- 게시글 목록 컨테이너 -->
+                <div class="board-list-wrap" id="board-list-container">
+                    <!-- JS로 동적 렌더링 -->
+                </div>
+            </section>
+
+        </div> <!-- end .content-wrapper -->
+
+        <!-- Mobile Bottom Navigation Bar -->
+        <nav class="bottom-nav">
+            <button class="bnav-item active" id="bnav-reserve" onclick="navTo('building-screen')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span>연습실 예약</span>
+            </button>
+            <button class="bnav-item" id="bnav-overview" onclick="navTo('overview-screen')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>전체 현황</span>
+            </button>
+            <button class="bnav-item" id="bnav-my" onclick="navTo('my-screen')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span>내 예약/취소</span>
+            </button>
+            <button class="bnav-item" id="bnav-board" onclick="navTo('board-screen')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>게시판</span>
+            </button>
+        </nav>
+
+
+        <!-- MODAL 1: 예약 정보 입력 모달 (Reservation Input Modal) -->
+        <div id="reservation-modal" class="app-modal" style="display:none;">
+            <div class="modal-backdrop" onclick="closeReservationModal()"></div>
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <div class="modal-header-text">
+                        <span class="m-sub">총신대학교 교회음악과</span>
+                        <h3 class="m-title">연습실 예약 신청</h3>
+                    </div>
+                    <button class="modal-close-btn" onclick="closeReservationModal()">✕</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Summary Card -->
+                    <div class="res-summary-card">
+                        <div class="rsc-row">
+                            <span class="rsc-label">예약 공간</span>
+                            <strong class="rsc-val" id="modal-summary-room">신관 B12호 (교음·오르간)</strong>
+                        </div>
+                        <div class="rsc-row">
+                            <span class="rsc-label">예약 일자</span>
+                            <strong class="rsc-val" id="modal-summary-date">2026.10.15 (목)</strong>
+                        </div>
+                        <div class="rsc-row highlight">
+                            <span class="rsc-label">예약 시간</span>
+                            <strong class="rsc-val color-blue" id="modal-summary-time">10:00 ~ 11:30 (총 1시간
+                                30분)</strong>
+                        </div>
+                    </div>
+
+                    <!-- Input Form -->
+                    <form id="reservation-form" onsubmit="event.preventDefault(); submitReservation();">
+                        <div class="form-group">
+                            <label for="input-res-name">이름 <span class="required">*</span></label>
+                            <input type="text" id="input-res-name" class="form-input" placeholder="이름을 입력하세요 (예: 홍길동)"
+                                required autocomplete="name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="input-res-sid">학번 <span class="required">*</span></label>
+                            <input type="text" id="input-res-sid" class="form-input"
+                                placeholder="학번을 입력하세요 (예: 20241234)" required autocomplete="off">
+                            <small class="field-hint">예약 확인 및 본인 취소 시 사용됩니다.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="input-res-phone">연락처 <span class="required">*</span></label>
+                            <input type="tel" id="input-res-phone" class="form-input"
+                                placeholder="연락처 (예: 010-1234-5678)" required autocomplete="tel"
+                                oninput="formatPhoneNumber(this)">
+                        </div>
+
+                        <div class="rules-box">
+                            <strong>📌 연습실 이용 수칙 준수 서약</strong>
+                            <ul>
+                                <li>음식물 반입 및 악기 훼손 행위를 일체 금합니다.</li>
+                                <li>퇴실 시 조명, 냉난방기 전원을 끄고 문을 잠가주세요.</li>
+                                <li>이용하지 못할 경우 <strong>반드시 사전에 예약을 취소</strong>하여 다른 학생이 이용할 수 있도록 배려해주세요.</li>
+                            </ul>
+                        </div>
+
+                        <div class="modal-footer-btns">
+                            <button type="button" class="btn-cancel" onclick="closeReservationModal()">취소</button>
+                            <button type="submit" class="btn-confirm" id="btn-submit-booking">
+                                <span>즉시 예약 확정하기</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- MODAL 2: 예약 완료 확인증 팝업 (Confirmation Success Modal) -->
+        <div id="success-modal" class="app-modal" style="display:none;">
+            <div class="modal-backdrop" onclick="closeSuccessModal()"></div>
+            <div class="modal-dialog success-dialog">
+                <div class="success-icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h3 class="success-title">예약이 확정되었습니다!</h3>
+                <p class="success-subtitle">별도의 승인 없이 즉시 예약 완료되었습니다.</p>
+
+                <div class="pass-card" id="success-pass-card">
+                    <!-- Injected via JS -->
+                </div>
+
+                <div class="success-actions">
+                    <button class="btn-confirm full" onclick="closeSuccessModalAndGo('my-screen')">내 예약 확인하기</button>
+                    <button class="btn-secondary full" onclick="closeSuccessModalAndGo('building-screen')">홈으로
+                        돌아가기</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- MODAL 3: 예약 취소 확인 모달 (Cancel Confirm Modal) -->
+        <div id="cancel-modal" class="app-modal" style="display:none;">
+            <div class="modal-backdrop" onclick="closeCancelModal()"></div>
+            <div class="modal-dialog cancel-dialog">
+                <div class="cancel-icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </div>
+                <h3 class="cancel-title">예약을 취소하시겠습니까?</h3>
+                <p class="cancel-desc">취소된 예약 시간은 즉시 다시 예약 가능한 상태로 복구되어 다른 학생이 이용할 수 있게 됩니다.</p>
+
+                <div class="cancel-target-box" id="cancel-target-info">
+                    <!-- Injected via JS -->
+                </div>
+
+                <div class="cancel-actions">
+                    <button class="btn-cancel" onclick="closeCancelModal()">취소 안 함</button>
+                    <button class="btn-danger-confirm" id="btn-execute-cancel" onclick="executeCancellation()">예약 취소
+                        확정</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- MODAL 4: 게시글 상세 열람 모달 -->
+        <div id="board-detail-modal" class="app-modal" style="display:none;">
+            <div class="modal-backdrop" onclick="closeBoardDetailModal()"></div>
+            <div class="modal-dialog board-detail-dialog">
+                <div class="modal-header">
+                    <div class="modal-title-group">
+                        <span class="modal-subtitle" id="post-detail-category">📢 공지사항</span>
+                        <h3 class="modal-title" id="post-detail-title">공지 제목</h3>
+                    </div>
+                    <button class="modal-close-btn" onclick="closeBoardDetailModal()">✕</button>
+                </div>
+                <div class="post-detail-meta" id="post-detail-meta">
+                    <!-- Meta info rendered by JS -->
+                </div>
+                <div class="post-detail-body" id="post-detail-body">
+                    <!-- Content rendered by JS -->
+                </div>
+                <!-- 답변 영역 (문의글일 때) -->
+                <div class="post-answer-box" id="post-answer-box" style="display:none;">
+                    <div class="pab-header">
+                        <span class="pab-badge">💬 관리자 공식 답변</span>
+                        <span class="pab-date" id="post-answer-date">2026.11.05</span>
+                    </div>
+                    <div class="pab-content" id="post-answer-content">
+                        <!-- Answer content -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary full" onclick="closeBoardDetailModal()">닫기</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- MODAL 5: 실명 문의글 작성 모달 -->
+        <div id="inquiry-modal" class="app-modal" style="display:none;">
+            <div class="modal-backdrop" onclick="closeInquiryModal()"></div>
+            <div class="modal-dialog inquiry-write-dialog">
+                <div class="modal-header">
+                    <div class="modal-header-text">
+                        <span class="m-sub">연습실 문의게시판</span>
+                        <h3 class="m-title">문의글 작성</h3>
+                    </div>
+                    <button class="modal-close-btn" onclick="closeInquiryModal()" aria-label="닫기">✕</button>
+                </div>
+                <div class="modal-body inquiry-modal-body">
+                    <div class="inquiry-notice-banner">
+                        <span class="inb-icon">💡</span>
+                        <span>건의 및 문의사항을 남겨주세요. <strong>관계자(관리자)에게만 공개</strong> 또는 <strong>전체 공개</strong>를 선택할 수 있습니다.</span>
+                    </div>
+
+                    <!-- 공개 범위 선택 (핵심 요구사항!) -->
+                    <div class="form-group">
+                        <label class="form-label">공개 범위 설정 <span class="required">*</span></label>
+                        <div class="visibility-toggle-group">
+                            <label class="vis-option-label selected" id="vis-label-staff">
+                                <input type="radio" name="inquiry-visibility" value="staff" checked onchange="onVisibilityChange()">
+                                <div class="vis-card">
+                                    <div class="vis-header">
+                                        <span class="vis-icon">🔒</span>
+                                        <strong>관계자에게 공개 (비공개)</strong>
+                                    </div>
+                                    <p class="vis-desc">관리자(학과실) 및 본인만 열람할 수 있습니다. 개인정보나 건의사항에 권장됩니다.</p>
+                                </div>
+                            </label>
+                            <label class="vis-option-label" id="vis-label-public">
+                                <input type="radio" name="inquiry-visibility" value="public" onchange="onVisibilityChange()">
+                                <div class="vis-card">
+                                    <div class="vis-header">
+                                        <span class="vis-icon">🌐</span>
+                                        <strong>전체 공개</strong>
+                                    </div>
+                                    <p class="vis-desc">모든 학생 및 이용자가 열람할 수 있습니다. (실명으로 노출)</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 실명 및 학번 필수 입력 -->
+                    <div class="form-row two-col">
+                        <div class="form-group">
+                            <label for="input-inquiry-name" class="form-label">작성자 이름 (실명) <span class="required">*</span></label>
+                            <input type="text" id="input-inquiry-name" class="form-input" placeholder="실명을 입력하세요" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="input-inquiry-sid" class="form-label">학번 <span class="required">*</span></label>
+                            <input type="text" id="input-inquiry-sid" class="form-input" placeholder="예: 20241234" required>
+                        </div>
+                    </div>
+
+                    <!-- 제목 -->
+                    <div class="form-group">
+                        <label for="input-inquiry-title" class="form-label">문의 제목 <span class="required">*</span></label>
+                        <input type="text" id="input-inquiry-title" class="form-input" placeholder="문의 제목을 입력하세요" required>
+                    </div>
+
+                    <!-- 내용 -->
+                    <div class="form-group">
+                        <label for="input-inquiry-content" class="form-label">문의 내용 <span class="required">*</span></label>
+                        <textarea id="input-inquiry-content" class="form-textarea" rows="5" placeholder="궁금한 사항, 시설 점검 요청, 분실물 문의 등을 자세히 적어주세요." required></textarea>
+                    </div>
+
+                    <div class="modal-footer-btns" style="margin-top: 18px;">
+                        <button type="button" class="btn-cancel" onclick="closeInquiryModal()">취소</button>
+                        <button type="button" class="btn-confirm" onclick="submitInquiryPost()">
+                            <span>문의 등록하기</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- MODAL 6: 관계자 공개글 본인 확인 모달 -->
+        <div id="board-auth-modal" class="app-modal" style="display:none;">
+            <div class="modal-backdrop" onclick="closeBoardAuthModal()"></div>
+            <div class="modal-dialog auth-dialog">
+                <div class="auth-icon-wrap">🔒</div>
+                <h3 class="auth-title">비공개 문의글 열람 확인</h3>
+                <p class="auth-desc">이 글은 <strong>관계자(관리자) 및 작성자 본인</strong>만 열람할 수 있습니다.<br>작성 시 입력한 <strong>학번</strong>을 입력해주세요.</p>
+                <div class="form-group" style="margin-top:16px;">
+                    <input type="text" id="input-auth-sid" class="form-input" placeholder="학번 입력 (예: 20241234)" style="text-align:center;">
+                </div>
+                <div class="auth-actions" style="display:flex; gap:8px; margin-top:16px;">
+                    <button class="btn-secondary full" onclick="closeBoardAuthModal()">취소</button>
+                    <button class="btn-confirm full" onclick="verifyAndOpenSecretPost()">열람 확인</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Toast Notification Element -->
+        <div id="toast" class="app-toast"></div>
+
+    </div> <!-- end #app-container -->
+
+    <script src="script.js"></script>
+</body>
+
+</html>

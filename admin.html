@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>총신대학교 교회음악과 연습실 관리자 시스템</title>
+    <meta name="description" content="총신대학교 교회음악과 연습실 실시간 예약 관리, 시설 운영 및 정책 설정 관리자 전용 포털">
+
+    <!-- Pretendard & Inter Web Fonts -->
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+    <!-- =================================================================
+         1. 관리자 보안 로그인 게이트웨이 (Admin Login Gateway)
+    ================================================================= -->
+    <div id="admin-login-screen" class="login-screen-wrapper" style="display: flex;">
+        <div class="login-card">
+            <div class="login-crest">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h2 class="login-title">연습실 관리자 인증</h2>
+            <p class="login-subtitle">총신대학교 교회음악과 운영진 전용 보안 접속 포털</p>
+
+            <form class="login-form" onsubmit="event.preventDefault(); handleAdminLogin();">
+                <div class="form-field">
+                    <label for="admin-id">관리자 아이디</label>
+                    <input type="text" id="admin-id" placeholder="관리자 ID 입력" required autocomplete="username">
+                </div>
+                <div class="form-field">
+                    <label for="admin-pw">비밀번호</label>
+                    <input type="password" id="admin-pw" placeholder="비밀번호 입력" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="login-btn" id="btn-admin-login">보안 로그인</button>
+            </form>
+
+            <a href="index.html" class="login-back-link">← 일반 학생 예약 페이지로 돌아가기</a>
+
+            <div class="login-security-notice">
+                🔒 <strong>보안 및 초기 관리자 안내</strong><br>
+                • 최초 마스터 계정: <strong>admin</strong> / 임시 초기 비밀번호: <strong>admin1234!</strong><br>
+                • 본 시스템은 인가된 관리자만 접근할 수 있으며, 모든 작업 내역은 감사 로그에 영구 기록됩니다.
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =================================================================
+         2. 관리자 메인 포털 인터페이스 (Main Admin Dashboard)
+    ================================================================= -->
+    <div id="admin-main-portal" class="admin-app" style="display: none;">
+
+        <!-- Top Global Header -->
+        <header class="admin-header">
+            <div class="admin-brand">
+                <div class="admin-brand-crest">
+                    <img src="logo.png" alt="총신대학교 로고" class="brand-logo-img"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                        stroke-linejoin="round" style="display:none;">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                </div>
+                <div class="admin-brand-text">
+                    <span>CHONGSHIN UNIV · CHURCH MUSIC</span>
+                    <h1>연습실 통합 관리 시스템</h1>
+                </div>
+            </div>
+
+            <div class="admin-user-nav">
+                <div class="admin-badge">
+                    <span class="admin-badge-dot"></span>
+                    <span id="current-admin-name">마스터 관리자</span>
+                </div>
+                <a href="index.html" target="_blank" class="btn-header-link" title="학생 예약 화면 새창 열기">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>학생 예약 화면</span>
+                </a>
+                <button class="btn-logout" onclick="handleAdminLogout()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>로그아웃</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Tab Navigation Bar -->
+        <nav class="admin-tab-nav">
+            <button class="admin-tab-btn active" onclick="switchAdminTab('dashboard')">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="9"></rect>
+                    <rect x="14" y="3" width="7" height="5"></rect>
+                    <rect x="14" y="12" width="7" height="9"></rect>
+                    <rect x="3" y="16" width="7" height="5"></rect>
+                </svg>
+                <span>운영 대시보드</span>
+            </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('reservations')">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>전체 예약 관리</span>
+                <span class="tab-count" id="badge-total-res">0</span>
+            </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('rooms')">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span>연습실 및 점검 관리</span>
+                <span class="tab-count" id="badge-total-rooms">45</span>
+            </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('policies')">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <span>예약 정책 설정</span>
+            </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('audit')">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                <span>관리자 감사 로그</span>
+                <span class="tab-count" id="badge-total-logs">0</span>
+            </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('board')">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>게시판 관리</span>
+                <span class="tab-count" id="badge-total-board">0</span>
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="admin-content">
+
+            <!-- =================================================================
+                 TAB 1: 운영 대시보드 (Dashboard)
+            ================================================================= -->
+            <section id="pane-dashboard" class="tab-pane active">
+                <!-- 4대 핵심 KPI 카드 -->
+                <div class="dashboard-kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-info">
+                            <span class="kpi-label">오늘의 전체 예약</span>
+                            <div class="kpi-value" id="kpi-today-count">0<span style="font-size:16px;">건</span></div>
+                            <span class="kpi-subtext" id="kpi-today-date">2026.10.22 기준</span>
+                        </div>
+                        <div class="kpi-icon-wrap blue">📅</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-info">
+                            <span class="kpi-label">현재 실시간 이용 중</span>
+                            <div class="kpi-value" id="kpi-now-using">0<span style="font-size:16px;">실</span></div>
+                            <span class="kpi-subtext" id="kpi-now-time">실시간 이용률 반영</span>
+                        </div>
+                        <div class="kpi-icon-wrap green">🎹</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-info">
+                            <span class="kpi-label">오늘 예약 취소 현황</span>
+                            <div class="kpi-value" id="kpi-today-cancel">0<span style="font-size:16px;">건</span></div>
+                            <span class="kpi-subtext">학생 취소 및 관리자 취소</span>
+                        </div>
+                        <div class="kpi-icon-wrap red">🚫</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-info">
+                            <span class="kpi-label">전체 등록 연습실</span>
+                            <div class="kpi-value" id="kpi-active-rooms">45<span style="font-size:16px;">실</span></div>
+                            <span class="kpi-subtext">신관 33실 · 종합관 12실</span>
+                        </div>
+                        <div class="kpi-icon-wrap amber">🏛️</div>
+                    </div>
+                </div>
+
+                <!-- 오늘 실시간 이용 모니터링 테이블 -->
+                <div class="table-card" style="margin-bottom: 28px;">
+                    <div class="table-header-bar">
+                        <div class="table-title-group">
+                            <h3>⚡ 실시간 현재 이용 중인 연습실</h3>
+                            <span>현재 시각 기준 연습실 이용자 현황</span>
+                        </div>
+                        <button class="btn-tb-reset" onclick="renderDashboard()">새로고침</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>건물/층</th>
+                                    <th>연습실</th>
+                                    <th>피아노/악기</th>
+                                    <th>이용 시간</th>
+                                    <th>예약자 (학번)</th>
+                                    <th>연락처</th>
+                                    <th>남은 시간</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-current-using">
+                                <!-- Dynamic Render -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 최근 예약 및 취소 현황 2분할 그리드 -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+                    <div class="table-card">
+                        <div class="table-header-bar">
+                            <div class="table-title-group">
+                                <h3>✨ 최근 접수된 예약 (최신 5건)</h3>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>예약일시</th>
+                                        <th>연습실</th>
+                                        <th>예약자</th>
+                                        <th>상태</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-recent-bookings"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="table-header-bar">
+                            <div class="table-title-group">
+                                <h3>⚠️ 최근 취소된 예약 (최신 5건)</h3>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>취소일시</th>
+                                        <th>연습실</th>
+                                        <th>예약자</th>
+                                        <th>취소 사유</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-recent-cancels"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- =================================================================
+                 TAB 2: 전체 예약 관리 (Reservations)
+            ================================================================= -->
+            <section id="pane-reservations" class="tab-pane">
+                <!-- Search & Filter Toolbar -->
+                <div class="toolbar-card">
+                    <div class="toolbar-grid">
+                        <div class="tb-field">
+                            <label for="filter-date">예약 날짜</label>
+                            <input type="date" id="filter-date" onchange="applyReservationFilters()">
+                        </div>
+                        <div class="tb-field">
+                            <label for="filter-building">건물 선택</label>
+                            <select id="filter-building" onchange="applyReservationFilters()">
+                                <option value="ALL">전체 건물</option>
+                                <option value="신관">신관 (New Hall)</option>
+                                <option value="종합관">종합관 (Main Hall)</option>
+                            </select>
+                        </div>
+                        <div class="tb-field">
+                            <label for="filter-room">연습실 호수</label>
+                            <input type="text" id="filter-room" placeholder="예: B12, 612, 3"
+                                oninput="applyReservationFilters()">
+                        </div>
+                        <div class="tb-field">
+                            <label for="filter-keyword">학생 이름/학번/연락처</label>
+                            <input type="text" id="filter-keyword" placeholder="이름 또는 학번 입력"
+                                oninput="applyReservationFilters()">
+                        </div>
+                        <div class="tb-field">
+                            <label for="filter-status">예약 상태</label>
+                            <select id="filter-status" onchange="applyReservationFilters()">
+                                <option value="ALL">전체 상태</option>
+                                <option value="confirmed">예약 확정</option>
+                                <option value="cancelled">취소됨</option>
+                            </select>
+                        </div>
+                        <div class="toolbar-actions">
+                            <button class="btn-tb-reset" onclick="resetReservationFilters()">필터 초기화</button>
+                            <button class="btn-tb-search" onclick="openAdminCreateModal()">+ 관리자 직접 예약</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Full Reservations Table -->
+                <div class="table-card">
+                    <div class="table-header-bar">
+                        <div class="table-title-group">
+                            <h3>전체 학생 예약 목록</h3>
+                            <span id="filtered-res-count">총 0건의 예약이 조회되었습니다</span>
+                        </div>
+                        <button class="btn-action detail" onclick="exportReservationsCSV()">📊 엑셀/CSV 내보내기</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>예약번호</th>
+                                    <th>예약일자</th>
+                                    <th>이용시간</th>
+                                    <th>건물/공간</th>
+                                    <th>연습실 유형</th>
+                                    <th>예약자</th>
+                                    <th>학번</th>
+                                    <th>연락처</th>
+                                    <th>상태</th>
+                                    <th>비고/취소사유</th>
+                                    <th>관리 작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-all-reservations">
+                                <!-- Dynamic Render -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- =================================================================
+                 TAB 3: 연습실 및 점검 관리 (Rooms & Facility)
+            ================================================================= -->
+            <section id="pane-rooms" class="tab-pane">
+                <div class="toolbar-card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h3 style="font-size:16px; font-weight:700; color:var(--primary-dark);">건물 및 층별 연습실 운영 설정</h3>
+                        <p style="font-size:12.5px; color:var(--gray-500); margin-top:2px;">연습실별 이용 가능 상태를 제어하거나 시설
+                            점검/조율 시간대를 등록하여 예약을 차단할 수 있습니다.</p>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-tb-search" onclick="openAddRoomModal()">+ 새 연습실 등록</button>
+                    </div>
+                </div>
+
+                <div class="segmented-control"
+                    style="margin-bottom:18px; display:inline-flex; background:var(--gray-200); border-radius:10px; padding:4px;">
+                    <button class="seg-btn active" id="btn-seg-shin" onclick="filterRoomBuilding('신관')"
+                        style="padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">신관
+                        (33실)</button>
+                    <button class="seg-btn" id="btn-seg-jong" onclick="filterRoomBuilding('종합관')"
+                        style="padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">종합관
+                        (12실)</button>
+                </div>
+
+                <!-- Rooms Grid Cards -->
+                <div class="rooms-manage-grid" id="rooms-manage-grid">
+                    <!-- Dynamic Render -->
+                </div>
+            </section>
+
+
+            <!-- =================================================================
+                 TAB 4: 예약 정책 설정 (Policies)
+            ================================================================= -->
+            <section id="pane-policies" class="tab-pane">
+                <div class="policy-grid">
+                    <div class="policy-card">
+                        <div class="policy-card-header">
+                            <span style="font-size:20px;">⏱️</span>
+                            <h3>예약 시간 및 횟수 제한 정책</h3>
+                        </div>
+
+                        <div class="policy-item">
+                            <label for="policy-max-hours">1회 최대 이용 시간</label>
+                            <p class="policy-desc">학생이 1회 예약 신청 시 연속으로 선택할 수 있는 최대 시간</p>
+                            <div class="policy-input-row">
+                                <select id="policy-max-hours" class="policy-input" style="width:160px;">
+                                    <option value="1">1시간 (2슬롯)</option>
+                                    <option value="1.5">1시간 30분 (3슬롯)</option>
+                                    <option value="2" selected>2시간 (4슬롯) - 기본값</option>
+                                    <option value="3">3시간 (6슬롯)</option>
+                                    <option value="4">4시간 (8슬롯)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="policy-item">
+                            <label for="policy-daily-max">하루 최대 예약 횟수 (1인당)</label>
+                            <p class="policy-desc">동일 학생(학번 기준)이 하루에 확정할 수 있는 최대 유효 예약 건수</p>
+                            <div class="policy-input-row">
+                                <input type="number" id="policy-daily-max" class="policy-input" min="1" max="10"
+                                    value="2">
+                                <span style="font-size:13px; color:var(--gray-600);">회 / 1일</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="policy-card">
+                        <div class="policy-card-header">
+                            <span style="font-size:20px;">📅</span>
+                            <h3>날짜 범위 및 취소 가능 시간 정책</h3>
+                        </div>
+
+                        <div class="policy-item">
+                            <label for="policy-open-hour">당일 예약 시스템 오픈 시각</label>
+                            <p class="policy-desc">매일 당일 연습실 예약 시스템이 개방되는 시각 (새벽 5시 전에는 예약 불가)</p>
+                            <div class="policy-input-row">
+                                <select id="policy-open-hour" class="policy-input" style="width:200px;">
+                                    <option value="5" selected>새벽 05:00 (기본값)</option>
+                                    <option value="6">아침 06:00</option>
+                                    <option value="7">아침 07:00</option>
+                                    <option value="9">아침 09:00 (운영 개시)</option>
+                                    <option value="0">00:00 (자정 즉시 오픈)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="policy-item">
+                            <label for="policy-advance-days">예약 가능한 날짜 범위</label>
+                            <p class="policy-desc">오늘을 기준으로 며칠 후까지 사전 예약을 허용할 것인지 설정 (0일 = 당일만 예약 가능)</p>
+                            <div class="policy-input-row">
+                                <input type="number" id="policy-advance-days" class="policy-input" min="0" max="60"
+                                    value="0">
+                                <span style="font-size:13px; color:var(--gray-600);">일 이내 (0일 = 당일 예약 전용, 사전예약 불가)</span>
+                            </div>
+                        </div>
+
+                        <div class="policy-item">
+                            <label for="policy-cancel-minutes">예약 취소 마감 시각</label>
+                            <p class="policy-desc">연습실 이용 시작 시간 몇 분 전까지 학생이 직접 취소할 수 있는지 설정</p>
+                            <div class="policy-input-row">
+                                <select id="policy-cancel-minutes" class="policy-input" style="width:260px;">
+                                    <option value="0">예약 확정후에도 언제든 취소 가능</option>
+                                    <option value="10">이용 시작 10분 전까지</option>
+                                    <option value="30" selected>이용 시작 30분 전까지 (기본값)</option>
+                                    <option value="60">이용 시작 1시간 전까지</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="policy-card" style="grid-column: 1 / -1;">
+                        <div class="policy-card-header">
+                            <span style="font-size:20px;">🔒</span>
+                            <h3>관리자 보안 비밀번호 변경</h3>
+                        </div>
+                        <div
+                            style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+                            <div class="form-field">
+                                <label for="input-cur-admin-pw">현재 비밀번호</label>
+                                <input type="password" id="input-cur-admin-pw" placeholder="현재 비밀번호 확인">
+                            </div>
+                            <div class="form-field">
+                                <label for="input-new-admin-pw">새 비밀번호</label>
+                                <input type="password" id="input-new-admin-pw" placeholder="8자 이상 영문/숫자/특수문자">
+                            </div>
+                            <div class="form-field">
+                                <label for="input-confirm-admin-pw">새 비밀번호 확인</label>
+                                <input type="password" id="input-confirm-admin-pw" placeholder="새 비밀번호 재입력">
+                            </div>
+                        </div>
+                        <div style="margin-top:14px;">
+                            <button type="button" class="btn-action edit" onclick="changeAdminPassword()">비밀번호 변경
+                                적용</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:24px; text-align:right;">
+                    <button class="btn-save-policy" onclick="savePolicies()">예약 정책 저장 및 즉시 반영</button>
+                </div>
+            </section>
+
+
+            <!-- =================================================================
+                 TAB 5: 감사 로그 / 작업 이력 (Audit Logs)
+            ================================================================= -->
+            <section id="pane-audit" class="tab-pane">
+                <div class="table-card">
+                    <div class="table-header-bar">
+                        <div class="table-title-group">
+                            <h3>관리자 작업 이력 및 보안 감사 로그</h3>
+                            <span>관리자가 수행한 예약 수정, 취소, 시설 점검 차단 및 정책 변경 내역</span>
+                        </div>
+                        <button class="btn-action detail" onclick="clearOldAuditLogs()">오래된 로그 정리</button>
+                    </div>
+                    <div class="admin-modal-body" style="padding: 20px;">
+                        <div class="audit-list" id="audit-logs-list">
+                            <!-- Dynamic Render -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- =================================================================
+                 TAB 6: 게시판 관리 (공지사항 등록 & 학생 문의 관리)
+            ================================================================= -->
+            <section id="pane-board" class="tab-pane">
+                <!-- 상단 카테고리 전환 서브탭 -->
+                <div class="board-admin-subnav" style="display:flex; gap:10px; margin-bottom:16px;">
+                    <button class="btn-action edit" id="btn-admin-subtab-notice" onclick="switchAdminBoardSubtab('notice')" style="padding:10px 18px; font-size:14px; font-weight:700;">
+                        📢 공지사항 관리 (관리자 전용 작성)
+                    </button>
+                    <button class="btn-action detail" id="btn-admin-subtab-inquiry" onclick="switchAdminBoardSubtab('inquiry')" style="padding:10px 18px; font-size:14px; font-weight:700;">
+                        💬 학생 실명 문의사항 관리 및 답변
+                    </button>
+                </div>
+
+                <!-- 1. 공지사항 관리 패널 -->
+                <div id="admin-notice-panel">
+                    <div class="table-card">
+                        <div class="table-header-bar">
+                            <div class="table-title-group">
+                                <h3>연습실 공지사항 목록</h3>
+                                <span>공지사항은 관리자만 작성할 수 있으며, 학생 예약 메인 화면 게시판에 즉시 노출됩니다.</span>
+                            </div>
+                            <button class="btn-primary" onclick="openAdminNoticeModal()" style="display:flex; align-items:center; gap:6px;">
+                                <span>➕ 새 공지사항 작성</span>
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:75px;">구분</th>
+                                        <th>공지 제목</th>
+                                        <th style="width:130px;">작성자</th>
+                                        <th style="width:120px;">등록일</th>
+                                        <th style="width:140px; text-align:center;">관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-admin-notices">
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 문의사항 관리 패널 -->
+                <div id="admin-inquiry-panel" style="display:none;">
+                    <div class="table-card">
+                        <div class="table-header-bar">
+                            <div class="table-title-group">
+                                <h3>학생 실명 문의사항 목록</h3>
+                                <span>학생들이 실명으로 남긴 문의사항입니다. 관계자 공개(비공개) 문의도 관리자는 전체 확인 및 답변 가능합니다.</span>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <select id="filter-inquiry-status" onchange="renderAdminInquiryTable()" class="policy-input" style="width:140px; padding:6px 10px;">
+                                    <option value="ALL">전체 문의</option>
+                                    <option value="WAITING">답변 대기중</option>
+                                    <option value="ANSWERED">답변 완료</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:95px;">공개 범위</th>
+                                        <th>문의 제목</th>
+                                        <th style="width:150px;">작성자 (실명 / 학번)</th>
+                                        <th style="width:110px;">등록일</th>
+                                        <th style="width:100px; text-align:center;">답변 상태</th>
+                                        <th style="width:140px; text-align:center;">관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-admin-inquiries">
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+
+    <!-- =================================================================
+         MODAL 1: 예약 수정 모달 (Edit Reservation Modal)
+    ================================================================= -->
+    <div id="modal-edit-reservation" class="admin-modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeEditModal()"></div>
+        <div class="admin-modal-dialog">
+            <div class="admin-modal-header">
+                <h3>예약 정보 수정</h3>
+                <button class="btn-modal-close" onclick="closeEditModal()">✕</button>
+            </div>
+            <form onsubmit="event.preventDefault(); submitEditReservation();">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="edit-res-id">
+
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label>예약 번호</label>
+                        <input type="text" id="edit-display-id" readonly
+                            style="background:var(--gray-100); color:var(--gray-600);">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="form-field">
+                            <label for="edit-res-date">예약 일자</label>
+                            <input type="date" id="edit-res-date" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-res-building">건물</label>
+                            <select id="edit-res-building" onchange="onEditBuildingChange()" required>
+                                <option value="신관">신관</option>
+                                <option value="종합관">종합관</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="form-field">
+                            <label for="edit-res-room">연습실 호수</label>
+                            <select id="edit-res-room" required>
+                                <!-- Dynamic options -->
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-res-start">시작 시간</label>
+                            <select id="edit-res-start" required>
+                                <!-- Injected from TIME_SLOTS -->
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-res-end">종료 시간</label>
+                            <select id="edit-res-end" required>
+                                <!-- Injected from TIME_SLOTS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="form-field">
+                            <label for="edit-res-name">예약자 이름</label>
+                            <input type="text" id="edit-res-name" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-res-sid">학번</label>
+                            <input type="text" id="edit-res-sid" required>
+                        </div>
+                    </div>
+
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label for="edit-res-phone">연락처</label>
+                        <input type="tel" id="edit-res-phone" required>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="edit-change-reason">수정 사유 (감사 로그 필수 기록)</label>
+                        <input type="text" id="edit-change-reason" placeholder="예: 학생 요청으로 인한 시간대 변경" required>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeEditModal()">취소</button>
+                    <button type="submit" class="btn-modal-confirm">수정 사항 저장 (중복 검증 포함)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- =================================================================
+         MODAL 2: 관리자 예약 취소 모달 (Admin Cancel Modal)
+    ================================================================= -->
+    <div id="modal-admin-cancel" class="admin-modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeAdminCancelModal()"></div>
+        <div class="admin-modal-dialog">
+            <div class="admin-modal-header">
+                <h3 style="color:var(--danger);">관리자 직권 예약 취소</h3>
+                <button class="btn-modal-close" onclick="closeAdminCancelModal()">✕</button>
+            </div>
+            <form onsubmit="event.preventDefault(); submitAdminCancel();">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="cancel-target-id">
+
+                    <p style="font-size:13.5px; color:var(--gray-600); margin-bottom:16px;">
+                        해당 학생의 예약을 관리자 직권으로 취소합니다. 취소된 시간대는 다른 학생이 즉시 다시 예약할 수 있도록 개방됩니다.
+                    </p>
+
+                    <div id="cancel-preview-box"
+                        style="background:var(--gray-50); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; margin-bottom:16px; font-size:13px; line-height:1.6;">
+                        <!-- Dynamic Info -->
+                    </div>
+
+                    <div class="form-field">
+                        <label for="input-cancel-reason">취소 사유 (필수 입력) <span
+                                style="color:var(--danger);">*</span></label>
+                        <textarea id="input-cancel-reason" rows="3"
+                            placeholder="예: 전공 실기 레슨 일정 중복으로 인한 시설 사용 불가, 학생 요청 등" required></textarea>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeAdminCancelModal()">닫기</button>
+                    <button type="submit" class="btn-modal-danger">예약 취소 확정</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- =================================================================
+         MODAL 3: 특정 시간대 점검/차단 모달 (Block Room Slots Modal)
+    ================================================================= -->
+    <div id="modal-block-room" class="admin-modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeBlockRoomModal()"></div>
+        <div class="admin-modal-dialog">
+            <div class="admin-modal-header">
+                <h3>시설 점검 및 특정 시간대 예약 차단</h3>
+                <button class="btn-modal-close" onclick="closeBlockRoomModal()">✕</button>
+            </div>
+            <form onsubmit="event.preventDefault(); submitBlockRoomSlot();">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="block-room-key">
+
+                    <div
+                        style="background:var(--primary-bg); border-radius:var(--radius-md); padding:12px 16px; margin-bottom:16px;">
+                        <strong id="block-target-room-name" style="color:var(--primary); font-size:15px;">신관
+                            B12호</strong>
+                    </div>
+
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label for="block-date">차단할 날짜</label>
+                        <input type="date" id="block-date" onchange="checkBlockConflicts()" required>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="form-field">
+                            <label for="block-start-time">차단 시작 시간</label>
+                            <select id="block-start-time" onchange="checkBlockConflicts()" required>
+                                <!-- TIME_SLOTS -->
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="block-end-time">차단 종료 시간</label>
+                            <select id="block-end-time" onchange="checkBlockConflicts()" required>
+                                <!-- TIME_SLOTS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label for="block-reason">차단 사유 (학생 화면에 안내 표시)</label>
+                        <input type="text" id="block-reason" placeholder="예: 피아노 정기 조율, 냉난방기 점검, 학과 행사 등" required>
+                    </div>
+
+                    <!-- 기존 예약 충돌 감지 알림창 -->
+                    <div id="block-conflict-alert" class="conflict-alert-box" style="display:none;">
+                        <div class="conflict-alert-title">
+                            ⚠️ 주의: 차단 시간대에 기존 예약이 존재합니다!
+                        </div>
+                        <p style="font-size:12px; color:#991b1b; margin-bottom:8px;">
+                            차단을 진행하시면 아래 학생의 기존 예약이 자동으로 취소(안내 사유 등록)됩니다. 진행하시겠습니까?
+                        </p>
+                        <div class="conflict-list" id="conflict-bookings-list">
+                            <!-- Dynamic conflict list -->
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeBlockRoomModal()">취소</button>
+                    <button type="submit" class="btn-modal-confirm" id="btn-submit-block">시간대 차단 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- =================================================================
+         MODAL 4: 연습실 등록/수정 모달 (Room Form Modal)
+    ================================================================= -->
+    <div id="modal-room-form" class="admin-modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeRoomFormModal()"></div>
+        <div class="admin-modal-dialog">
+            <div class="admin-modal-header">
+                <h3 id="room-form-modal-title">새 연습실 등록</h3>
+                <button class="btn-modal-close" onclick="closeRoomFormModal()">✕</button>
+            </div>
+            <form onsubmit="event.preventDefault(); submitRoomForm();">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="room-form-mode" value="add">
+                    <input type="hidden" id="room-form-orig-key">
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="form-field">
+                            <label for="rf-building">건물</label>
+                            <select id="rf-building" required>
+                                <option value="신관">신관</option>
+                                <option value="종합관">종합관</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="rf-floor">층</label>
+                            <input type="text" id="rf-floor" placeholder="예: B1, 5F, 6F, 2F" required>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="form-field">
+                            <label for="rf-number">연습실 호수</label>
+                            <input type="text" id="rf-number" placeholder="예: B19, 511, 13" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="rf-type">악기 / 공간 유형</label>
+                            <input type="text" id="rf-type" placeholder="예: 그랜드, 오르간, 업라이트" required>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="rf-category">구분 태그</label>
+                        <select id="rf-category">
+                            <option value="normal">일반 연습실 (업라이트/피아노)</option>
+                            <option value="grand">그랜드 피아노 실</option>
+                            <option value="organ">오르간 실</option>
+                            <option value="society">학회실</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeRoomFormModal()">취소</button>
+                    <button type="submit" class="btn-modal-confirm">저장하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- =================================================================
+         MODAL 5: 관리자 공지사항 작성/수정 모달
+    ================================================================= -->
+    <div id="modal-admin-notice" class="admin-modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeAdminNoticeModal()"></div>
+        <div class="admin-modal-dialog">
+            <div class="admin-modal-header">
+                <h3 id="admin-notice-modal-title">새 공지사항 작성</h3>
+                <button class="btn-modal-close" onclick="closeAdminNoticeModal()">✕</button>
+            </div>
+            <form onsubmit="event.preventDefault(); submitAdminNotice();">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="admin-notice-id">
+
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label for="admin-notice-title">공지 제목 <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="admin-notice-title" placeholder="공지 제목을 입력하세요" required>
+                    </div>
+
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="admin-notice-important" style="width:18px; height:18px;">
+                            <strong style="color:#d97706;">★ 중요 공지사항으로 상단 고정</strong>
+                        </label>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="admin-notice-content">공지 내용 <span style="color:#ef4444;">*</span></label>
+                        <textarea id="admin-notice-content" rows="8" placeholder="학생들에게 공지할 내용을 자세히 작성하세요." required style="width:100%; padding:10px; border:1px solid var(--gray-300); border-radius:var(--radius-sm); font-family:inherit; font-size:14px; line-height:1.6;"></textarea>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeAdminNoticeModal()">취소</button>
+                    <button type="submit" class="btn-modal-confirm" id="btn-save-notice">공지사항 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- =================================================================
+         MODAL 6: 관리자 학생 문의 상세 및 답변 등록 모달
+    ================================================================= -->
+    <div id="modal-admin-inquiry" class="admin-modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeAdminInquiryModal()"></div>
+        <div class="admin-modal-dialog" style="max-width:640px;">
+            <div class="admin-modal-header">
+                <h3>학생 실명 문의사항 확인 및 답변</h3>
+                <button class="btn-modal-close" onclick="closeAdminInquiryModal()">✕</button>
+            </div>
+            <div class="admin-modal-body">
+                <input type="hidden" id="admin-inquiry-id">
+
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:var(--radius-sm); padding:16px; margin-bottom:18px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span id="admin-inquiry-vis-badge" class="badge-status confirmed">전체 공개</span>
+                        <span id="admin-inquiry-date" style="font-size:12px; color:var(--gray-500);">2026.11.05</span>
+                    </div>
+                    <h4 id="admin-inquiry-title" style="font-size:16px; font-weight:700; margin-bottom:8px; color:var(--gray-900);">문의 제목</h4>
+                    <div style="font-size:13px; color:var(--gray-600); margin-bottom:12px;">
+                        <strong>작성자(실명):</strong> <span id="admin-inquiry-author" style="color:var(--primary); font-weight:700;">홍길동</span> · 
+                        <strong>학번:</strong> <span id="admin-inquiry-sid">20241001</span>
+                    </div>
+                    <div id="admin-inquiry-content" style="font-size:14px; line-height:1.6; color:var(--gray-800); white-space:pre-wrap; background:white; padding:12px; border-radius:var(--radius-sm); border:1px solid #e2e8f0;">
+                        문의 내용
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label for="admin-inquiry-answer" style="font-weight:700; color:var(--gray-900); display:flex; justify-content:space-between;">
+                        <span>💬 관리자 공식 답변 등록/수정</span>
+                        <span id="admin-answer-status" style="font-size:12px; color:#16a34a;"></span>
+                    </label>
+                    <textarea id="admin-inquiry-answer" rows="5" placeholder="학생에게 안내할 공식 답변을 입력하세요. (등록 시 학생 화면에 즉시 표시됩니다.)" style="width:100%; padding:10px; border:1.5px solid #93c5fd; border-radius:var(--radius-sm); font-family:inherit; font-size:14px; line-height:1.6; margin-top:6px;"></textarea>
+                </div>
+            </div>
+            <div class="admin-modal-footer" style="justify-content:space-between;">
+                <button type="button" class="btn-action cancel" onclick="deleteAdminInquiry()">문의글 삭제</button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn-modal-cancel" onclick="closeAdminInquiryModal()">닫기</button>
+                    <button type="button" class="btn-modal-confirm" onclick="saveAdminAnswer()">공식 답변 저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Toast Notification -->
+    <div id="admin-toast" class="admin-toast"></div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>

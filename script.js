@@ -1593,6 +1593,30 @@ function submitReservation() {
         return;
     }
 
+    // 정책 검증 3: 동일 학생의 타 연습실 동시간대 중복 예약 방지 (건물/층/호실 무관)
+    // 예: 신관 5층에서 11:00에 예약 중이면 다른 건물이나 신관의 다른 연습실에서 겹치는 시간대 예약 불가
+    const timeConflictBooking = myTodayBookings.find(r => {
+        const rStartMin = r.startMin !== undefined ? r.startMin : timeStrToMinutes(r.startTime);
+        const rEndMin = r.endMin !== undefined ? r.endMin : timeStrToMinutes(r.endTime);
+        // 시간이 겹치는 조건 (StartA < EndB && EndA > StartB)
+        return (startMin < rEndMin && endMin > rStartMin);
+    });
+
+    if (timeConflictBooking) {
+        const bldName = timeConflictBooking.building || "연습실";
+        const roomName = timeConflictBooking.room ? `${timeConflictBooking.room}호` : "";
+        const floorName = timeConflictBooking.floor ? `(${timeConflictBooking.floor})` : "";
+
+        alert(`[동시간대 중복 예약 불가 안내]\n\n` +
+              `이미 동일한 시간대에 다른 연습실 예약 내역이 존재합니다!\n\n` +
+              `• 기존 예약: ${bldName} ${roomName} ${floorName}\n` +
+              `• 기존 이용 시간: ${timeConflictBooking.startTime} ~ ${timeConflictBooking.endTime}\n` +
+              `• 신청한 시간: ${startStr} ~ ${endStr}\n\n` +
+              `1인당 동일한 시간대에는 하나의 연습실만 이용할 수 있습니다.\n` +
+              `기존 예약을 [내 예약] 메뉴에서 취소하신 후 다시 신청해주시기 바랍니다.`);
+        return;
+    }
+
     // 다시 한 번 엄격한 중복 체크
     const check = checkOverlap(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin);
     if (check.overlap) {

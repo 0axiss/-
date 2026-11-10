@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css?v=20261106_v2">
+    <link rel="stylesheet" href="style.css?v=20261110_v1">
 </head>
 
 <body>
@@ -401,7 +401,6 @@
                             autocomplete="off">
                         <button class="search-btn" onclick="searchMyReservations()">조회</button>
                     </div>
-                    <p class="search-tip">💡 예약 시 입력하셨던 학번이나 전화번호를 입력하시면 예약 내역을 즉시 확인하고 취소할 수 있습니다.</p>
                 </div>
 
                 <!-- Results container -->
@@ -547,7 +546,6 @@
                             <label for="input-res-sid">학번 <span class="required">*</span></label>
                             <input type="text" id="input-res-sid" class="form-input"
                                 placeholder="학번을 입력하세요 (예: 20241234)" required autocomplete="off">
-                            <small class="field-hint">예약 확인 및 본인 취소 시 사용됩니다.</small>
                         </div>
 
                         <div class="form-group">
@@ -557,14 +555,8 @@
                                 oninput="formatPhoneNumber(this)">
                         </div>
 
-                        <div class="rules-box">
-                            <strong>📌 연습실 이용 수칙 준수 서약</strong>
-                            <ul>
-                                <li>음식물 반입 및 악기 훼손 행위를 일체 금합니다.</li>
-                                <li>퇴실 시 조명, 냉난방기 전원을 끄고 문을 잠가주세요.</li>
-                                <li><strong>동일 시간 중복 예약 불가</strong>: 동일 시간대에 여러 연습실을 동시에 예약할 수 없습니다.</li>
-                                <li>이용하지 못할 경우 <strong>반드시 사전에 예약을 취소</strong>하여 다른 학생이 이용할 수 있도록 배려해주세요.</li>
-                            </ul>
+                        <div class="rules-chip">
+                            <span>💡 음식물 반입 금지 · 퇴실 시 소등 · 중복 예약 불가</span>
                         </div>
 
                         <div class="modal-footer-btns">
@@ -657,7 +649,7 @@
                         <!-- Answer content -->
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="board-detail-footer" id="board-detail-footer">
                     <button class="btn-secondary full" onclick="closeBoardDetailModal()">닫기</button>
                 </div>
             </div>
@@ -676,33 +668,20 @@
                     <button class="modal-close-btn" onclick="closeInquiryModal()" aria-label="닫기">✕</button>
                 </div>
                 <div class="modal-body inquiry-modal-body">
-                    <div class="inquiry-notice-banner">
-                        <span class="inb-icon">💡</span>
-                        <span>건의 및 문의사항을 남겨주세요. <strong>관계자(관리자)에게만 공개</strong> 또는 <strong>전체 공개</strong>를 선택할 수 있습니다.</span>
-                    </div>
-
-                    <!-- 공개 범위 선택 (핵심 요구사항!) -->
+                    <!-- 공개 범위 선택 (간결한 2분할 버튼) -->
                     <div class="form-group">
                         <label class="form-label">공개 범위 설정 <span class="required">*</span></label>
                         <div class="visibility-toggle-group">
-                            <label class="vis-option-label selected" id="vis-label-staff">
+                            <label class="vis-option-label" id="vis-label-staff">
                                 <input type="radio" name="inquiry-visibility" value="staff" checked onchange="onVisibilityChange()">
-                                <div class="vis-card">
-                                    <div class="vis-header">
-                                        <span class="vis-icon">🔒</span>
-                                        <strong>관계자에게 공개 (비공개)</strong>
-                                    </div>
-                                    <p class="vis-desc">관리자(학과실) 및 본인만 열람할 수 있습니다. 개인정보나 건의사항에 권장됩니다.</p>
+                                <div class="vis-btn-pill">
+                                    <span>🔒 관계자 비공개</span>
                                 </div>
                             </label>
                             <label class="vis-option-label" id="vis-label-public">
                                 <input type="radio" name="inquiry-visibility" value="public" onchange="onVisibilityChange()">
-                                <div class="vis-card">
-                                    <div class="vis-header">
-                                        <span class="vis-icon">🌐</span>
-                                        <strong>전체 공개</strong>
-                                    </div>
-                                    <p class="vis-desc">모든 학생 및 이용자가 열람할 수 있습니다. (실명으로 노출)</p>
+                                <div class="vis-btn-pill">
+                                    <span>🌐 전체 공개</span>
                                 </div>
                             </label>
                         </div>
@@ -729,10 +708,10 @@
                     <!-- 내용 -->
                     <div class="form-group">
                         <label for="input-inquiry-content" class="form-label">문의 내용 <span class="required">*</span></label>
-                        <textarea id="input-inquiry-content" class="form-textarea" rows="5" placeholder="궁금한 사항, 시설 점검 요청, 분실물 문의 등을 자세히 적어주세요." required></textarea>
+                        <textarea id="input-inquiry-content" class="form-textarea" rows="4" placeholder="문의 내용을 입력하세요." required></textarea>
                     </div>
 
-                    <div class="modal-footer-btns" style="margin-top: 18px;">
+                    <div class="modal-footer-btns" style="margin-top: 14px;">
                         <button type="button" class="btn-cancel" onclick="closeInquiryModal()">취소</button>
                         <button type="button" class="btn-confirm" onclick="submitInquiryPost()">
                             <span>문의 등록하기</span>
@@ -769,9 +748,9 @@
     <!-- Firebase Realtime Cloud Synchronization -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="firebase-sync.js?v=20261106_v3"></script>
+    <script src="firebase-sync.js?v=20261110_v1"></script>
 
-    <script src="script.js?v=20261106_v3"></script>
+    <script src="script.js?v=20261110_v1"></script>
 </body>
 
 </html>

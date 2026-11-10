@@ -1147,37 +1147,19 @@ function onSlotClick(slotIdx) {
     if (selectedStartSlotIdx === null || selectedEndSlotIdx === null) {
         selectedStartSlotIdx = slotIdx;
         selectedEndSlotIdx = slotIdx;
-        showToast(`${clickedSlot.startStr} ~ ${clickedSlot.endStr} 선택됨 (연속된 시간으로 최대 ${maxAllowedSlots}개 슬롯까지 가능)`, "success");
     }
     // 2. 단 1개만 선택되어 있고, 같은 슬롯을 다시 누른 경우 -> 선택 해제
     else if (selectedStartSlotIdx === slotIdx && selectedEndSlotIdx === slotIdx) {
         selectedStartSlotIdx = null;
         selectedEndSlotIdx = null;
-        showToast("선택이 해제되었습니다.", "normal");
     }
     // 3. 현재 선택된 구간의 마지막(종료) 슬롯을 누른 경우 -> 1개 축소
     else if (slotIdx === selectedEndSlotIdx && selectedEndSlotIdx > selectedStartSlotIdx) {
         selectedEndSlotIdx = slotIdx - 1;
-        const currentCount = selectedEndSlotIdx - selectedStartSlotIdx + 1;
-        const startSlot = TIME_SLOTS[selectedStartSlotIdx];
-        const endSlot = TIME_SLOTS[selectedEndSlotIdx];
-        const durMins = endSlot.endMinutes - startSlot.startMinutes;
-        const h = Math.floor(durMins / 60);
-        const m = durMins % 60;
-        const durText = `${h > 0 ? h + '시간 ' : ''}${m > 0 ? m + '분' : ''}`;
-        showToast(`선택 축소: ${durText} (${currentCount}/${maxAllowedSlots}개 슬롯)`, "normal");
     }
     // 4. 현재 선택된 구간의 첫(시작) 슬롯을 누른 경우 -> 1개 축소
     else if (slotIdx === selectedStartSlotIdx && selectedEndSlotIdx > selectedStartSlotIdx) {
         selectedStartSlotIdx = slotIdx + 1;
-        const currentCount = selectedEndSlotIdx - selectedStartSlotIdx + 1;
-        const startSlot = TIME_SLOTS[selectedStartSlotIdx];
-        const endSlot = TIME_SLOTS[selectedEndSlotIdx];
-        const durMins = endSlot.endMinutes - startSlot.startMinutes;
-        const h = Math.floor(durMins / 60);
-        const m = durMins % 60;
-        const durText = `${h > 0 ? h + '시간 ' : ''}${m > 0 ? m + '분' : ''}`;
-        showToast(`선택 축소: ${durText} (${currentCount}/${maxAllowedSlots}개 슬롯)`, "normal");
     }
     // 5. 현재 선택 구간의 바로 다음 슬롯을 클릭 (연속으로 뒤로 1개 추가)
     else if (slotIdx === selectedEndSlotIdx + 1) {
@@ -1186,13 +1168,6 @@ function onSlotClick(slotIdx) {
             showToast(`1회 최대 ${maxAllowedSlots}개 슬롯(${maxHoursLabel}시간)까지만 연속 예약할 수 있습니다.`, "error");
         } else {
             selectedEndSlotIdx = slotIdx;
-            const startSlot = TIME_SLOTS[selectedStartSlotIdx];
-            const endSlot = TIME_SLOTS[selectedEndSlotIdx];
-            const durMins = endSlot.endMinutes - startSlot.startMinutes;
-            const h = Math.floor(durMins / 60);
-            const m = durMins % 60;
-            const durText = `${h > 0 ? h + '시간 ' : ''}${m > 0 ? m + '분' : ''}`;
-            showToast(`${durText} 선택 완료 (${newCount}/${maxAllowedSlots}개 슬롯)`, "success");
         }
     }
     // 6. 현재 선택 구간의 바로 이전 슬롯을 클릭 (연속으로 앞으로 1개 추가)
@@ -1202,13 +1177,6 @@ function onSlotClick(slotIdx) {
             showToast(`1회 최대 ${maxAllowedSlots}개 슬롯(${maxHoursLabel}시간)까지만 연속 예약할 수 있습니다.`, "error");
         } else {
             selectedStartSlotIdx = slotIdx;
-            const startSlot = TIME_SLOTS[selectedStartSlotIdx];
-            const endSlot = TIME_SLOTS[selectedEndSlotIdx];
-            const durMins = endSlot.endMinutes - startSlot.startMinutes;
-            const h = Math.floor(durMins / 60);
-            const m = durMins % 60;
-            const durText = `${h > 0 ? h + '시간 ' : ''}${m > 0 ? m + '분' : ''}`;
-            showToast(`${durText} 선택 완료 (${newCount}/${maxAllowedSlots}개 슬롯)`, "success");
         }
     }
     // 7. 한 타임 이상 건너뛴 슬롯을 누른 경우:
@@ -1231,17 +1199,9 @@ function onSlotClick(slotIdx) {
 
         if (canExtendContinuous) {
             selectedEndSlotIdx = slotIdx;
-            const startSlot = TIME_SLOTS[selectedStartSlotIdx];
-            const endSlot = TIME_SLOTS[selectedEndSlotIdx];
-            const durMins = endSlot.endMinutes - startSlot.startMinutes;
-            const h = Math.floor(durMins / 60);
-            const m = durMins % 60;
-            const durText = `${h > 0 ? h + '시간 ' : ''}${m > 0 ? m + '분' : ''}`;
-            showToast(`${durText} 연속 선택 완료 (${spanCount}/${maxAllowedSlots}개 슬롯)`, "success");
         } else {
             selectedStartSlotIdx = slotIdx;
             selectedEndSlotIdx = slotIdx;
-            showToast(`${clickedSlot.startStr} ~ ${clickedSlot.endStr} 시작 시간 선택됨 (연속된 시간만 추가 가능)`, "normal");
         }
     }
 
@@ -1610,13 +1570,7 @@ function submitReservation() {
         const roomName = timeConflictBooking.room ? `${timeConflictBooking.room}호` : "";
         const floorName = timeConflictBooking.floor ? `(${timeConflictBooking.floor})` : "";
 
-        alert(`[동시간대 중복 예약 불가 안내]\n\n` +
-              `이미 동일한 시간대에 다른 연습실 예약 내역이 존재합니다!\n\n` +
-              `• 기존 예약: ${bldName} ${roomName} ${floorName}\n` +
-              `• 기존 이용 시간: ${timeConflictBooking.startTime} ~ ${timeConflictBooking.endTime}\n` +
-              `• 신청한 시간: ${startStr} ~ ${endStr}\n\n` +
-              `1인당 동일한 시간대에는 하나의 연습실만 이용할 수 있습니다.\n` +
-              `기존 예약을 [내 예약] 메뉴에서 취소하신 후 다시 신청해주시기 바랍니다.`);
+        alert(`[중복 예약 불가]\n이미 동일한 시간대에 ${bldName} ${roomName} (${timeConflictBooking.startTime}~${timeConflictBooking.endTime}) 예약이 있습니다.\n기존 예약을 취소하신 후 다시 신청해주세요.`);
         return;
     }
 
@@ -2739,12 +2693,69 @@ function openBoardDetailModal(post) {
         answerBox.style.display = "none";
     }
 
+    // 모달 푸터 버튼 동적 렌더링 (문의글인 경우 글 삭제 버튼 노출)
+    const footer = document.getElementById("board-detail-footer");
+    if (footer) {
+        if (post.category === "inquiry") {
+            footer.innerHTML = `
+                <button type="button" class="btn-post-delete" onclick="deleteStudentInquiry('${post.id}')">
+                    <span>🗑️ 글 삭제</span>
+                </button>
+                <button type="button" class="btn-secondary" style="min-width: 90px; height: 44px;" onclick="closeBoardDetailModal()">닫기</button>
+            `;
+        } else {
+            footer.innerHTML = `
+                <button type="button" class="btn-secondary full" style="height: 44px;" onclick="closeBoardDetailModal()">닫기</button>
+            `;
+        }
+    }
+
     modal.style.display = "flex";
 }
 
 function closeBoardDetailModal() {
     const modal = document.getElementById("board-detail-modal");
     if (modal) modal.style.display = "none";
+}
+
+// 학생 문의글 삭제 처리 (본인 학번 검증 후 클라우드 동기화)
+function deleteStudentInquiry(postId) {
+    const allPosts = getAllBoardPosts();
+    const target = allPosts.find(p => p.id === postId);
+    if (!target) {
+        showToast("삭제할 문의글을 찾을 수 없습니다.", "error");
+        return;
+    }
+
+    // 1. 작성자 본인 학번 확인
+    const savedSid = localStorage.getItem(LAST_SEARCH_KEY) || "";
+    if (savedSid && savedSid === target.authorId) {
+        // 현재 기기에 저장된 학번과 일치
+    } else {
+        const inputSid = prompt("작성자 본인 확인을 위해 작성 시 입력한 학번을 입력해주세요:");
+        if (!inputSid) return;
+        if (inputSid.trim() !== target.authorId) {
+            alert("학번이 일치하지 않습니다. 본인이 작성한 글만 삭제할 수 있습니다.");
+            return;
+        }
+    }
+
+    // 2. 관리자 답변 여부에 따른 안내
+    let confirmMsg = `[${target.title}]\n문의글을 정말 삭제하시겠습니까?`;
+    if (target.answer) {
+        confirmMsg = `이미 관리자 답변이 완료된 문의글입니다.\n정말 삭제하시겠습니까? (삭제 시 복구 불가)`;
+    }
+
+    if (!confirm(confirmMsg)) return;
+
+    // 3. 배열에서 제거 후 저장 (로컬 + Firebase 클라우드 자동 동기화)
+    const remaining = allPosts.filter(p => p.id !== postId);
+    saveAllBoardPosts(remaining);
+
+    // 4. 모달 닫기 및 화면 갱신
+    closeBoardDetailModal();
+    renderBoardList();
+    showToast("문의글이 삭제되었습니다.", "success");
 }
 
 // 실명 문의글 작성

@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css?v=20261110_v1">
+    <link rel="stylesheet" href="style.css?v=20261110_v2">
 </head>
 
 <body>
@@ -633,24 +633,26 @@
                     </div>
                     <button class="modal-close-btn" onclick="closeBoardDetailModal()">✕</button>
                 </div>
-                <div class="post-detail-meta" id="post-detail-meta">
-                    <!-- Meta info rendered by JS -->
-                </div>
-                <div class="post-detail-body" id="post-detail-body">
-                    <!-- Content rendered by JS -->
-                </div>
-                <!-- 답변 영역 (문의글일 때) -->
-                <div class="post-answer-box" id="post-answer-box" style="display:none;">
-                    <div class="pab-header">
-                        <span class="pab-badge">💬 관리자 공식 답변</span>
-                        <span class="pab-date" id="post-answer-date">2026.11.05</span>
+                <div class="modal-body" style="padding: 16px 20px 24px;">
+                    <div class="post-detail-meta" id="post-detail-meta">
+                        <!-- Meta info rendered by JS -->
                     </div>
-                    <div class="pab-content" id="post-answer-content">
-                        <!-- Answer content -->
+                    <div class="post-detail-body" id="post-detail-body">
+                        <!-- Content rendered by JS -->
                     </div>
-                </div>
-                <div class="board-detail-footer" id="board-detail-footer">
-                    <button class="btn-secondary full" onclick="closeBoardDetailModal()">닫기</button>
+                    <!-- 답변 영역 (문의글일 때) -->
+                    <div class="post-answer-box" id="post-answer-box" style="display:none;">
+                        <div class="pab-header">
+                            <span class="pab-badge">💬 관리자 공식 답변</span>
+                            <span class="pab-date" id="post-answer-date">2026.11.05</span>
+                        </div>
+                        <div class="pab-content" id="post-answer-content">
+                            <!-- Answer content -->
+                        </div>
+                    </div>
+                    <div class="board-detail-footer" id="board-detail-footer">
+                        <button class="btn-secondary full" onclick="closeBoardDetailModal()">닫기</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -748,9 +750,9 @@
     <!-- Firebase Realtime Cloud Synchronization -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="firebase-sync.js?v=20261110_v1"></script>
+    <script src="firebase-sync.js?v=20261110_v2"></script>
 
-    <script src="script.js?v=20261110_v1"></script>
+    <script src="script.js?v=20261110_v2"></script>
 </body>
 
 </html>

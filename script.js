@@ -2589,7 +2589,10 @@ function renderBoardList() {
             <p class="bpc-snippet">${snippetText}</p>
             <div class="bpc-bottom-row">
                 <span class="bpc-author">작성자: ${escapeHtml(post.authorName)}${post.authorId && post.authorId !== 'admin' ? ` (${maskStudentId(post.authorId)})` : ''}</span>
-                <span style="font-size:12px; color:var(--primary); font-weight:600;">상세보기 ›</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    ${post.category === "inquiry" ? `<button type="button" class="btn-card-delete" onclick="event.stopPropagation(); deleteStudentInquiry('${post.id}')">🗑️ 삭제</button>` : ''}
+                    <span style="font-size:12px; color:var(--primary); font-weight:600;">상세보기 ›</span>
+                </div>
             </div>
         `;
 

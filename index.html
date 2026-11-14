@@ -394,13 +394,16 @@
                     </div>
                 </div>
 
-                <!-- Student ID Search Box -->
+                <!-- Student ID & PIN Search Box -->
                 <div class="search-card">
-                    <label for="search-student-id">학번 또는 전화번호로 간편 조회</label>
-                    <div class="search-input-group">
-                        <input type="text" id="search-student-id" placeholder="학번 입력 (예: 20241234) 또는 연락처"
-                            autocomplete="off">
-                        <button class="search-btn" onclick="searchMyReservations()">조회</button>
+                    <label>본인 확인 및 예약 내역 조회</label>
+                    <p style="font-size:12px; color:var(--gray-500); margin:2px 0 10px 0;">타인의 무단 조회 및 취소 방지를 위해 학번과 4자리 비밀번호가 일치해야 합니다.</p>
+                    <div class="search-input-group" style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <input type="text" id="search-student-id" placeholder="학번 (예: 20241234)"
+                            autocomplete="off" style="flex:1.2; min-width:140px;" onkeydown="if(event.key==='Enter') searchMyReservations();">
+                        <input type="password" id="search-pin" placeholder="비밀번호 4자리" maxlength="4"
+                            pattern="[0-9]{4}" inputmode="numeric" autocomplete="off" style="flex:1; min-width:110px;" onkeydown="if(event.key==='Enter') searchMyReservations();">
+                        <button class="search-btn" onclick="searchMyReservations()" style="white-space:nowrap; padding:0 20px;">내 예약 조회</button>
                     </div>
                 </div>
 
@@ -554,6 +557,16 @@
                             <input type="tel" id="input-res-phone" class="form-input"
                                 placeholder="연락처 (예: 010-1234-5678)" required autocomplete="tel"
                                 oninput="formatPhoneNumber(this)">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="input-res-pin">본인 확인 비밀번호 (숫자 4자리) <span class="required">*</span></label>
+                            <input type="password" id="input-res-pin" class="form-input"
+                                placeholder="조회 및 취소용 비밀번호 4자리 (예: 1234)" required maxlength="4"
+                                pattern="[0-9]{4}" inputmode="numeric" autocomplete="off">
+                            <span style="font-size:11.5px; color:var(--gray-500); margin-top:4px; display:block;">
+                                🔒 타인의 무단 조회 및 악의적 취소를 방지하기 위한 4자리 비밀번호입니다.
+                            </span>
                         </div>
 
                         <div class="rules-chip">
@@ -751,17 +764,17 @@
     <!-- Firebase Realtime Cloud Synchronization -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="firebase-sync.js?v=20261115_v2"></script>
+    <script src="firebase-sync.js?v=20261115_v3"></script>
 
     <!-- Modularized System Engines -->
-    <script src="js/utils.js?v=20261115_v2"></script>
-    <script src="js/data.js?v=20261115_v2"></script>
-    <script src="js/storage.js?v=20261115_v2"></script>
-    <script src="js/navigation.js?v=20261115_v2"></script>
-    <script src="js/timetable.js?v=20261115_v2"></script>
-    <script src="js/reservation.js?v=20261115_v2"></script>
-    <script src="js/board.js?v=20261115_v2"></script>
-    <script src="js/app.js?v=20261115_v2"></script>
+    <script src="js/utils.js?v=20261115_v3"></script>
+    <script src="js/data.js?v=20261115_v3"></script>
+    <script src="js/storage.js?v=20261115_v3"></script>
+    <script src="js/navigation.js?v=20261115_v3"></script>
+    <script src="js/timetable.js?v=20261115_v3"></script>
+    <script src="js/reservation.js?v=20261115_v3"></script>
+    <script src="js/board.js?v=20261115_v3"></script>
+    <script src="js/app.js?v=20261115_v3"></script>
 </body>
 
 </html>

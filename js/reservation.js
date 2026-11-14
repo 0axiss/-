@@ -71,11 +71,13 @@ function submitReservation() {
     const nameInput = document.getElementById("input-res-name");
     const sidInput = document.getElementById("input-res-sid");
     const phoneInput = document.getElementById("input-res-phone");
+    const pinInput = document.getElementById("input-res-pin");
     const submitBtn = document.getElementById("btn-submit-booking");
 
     const name = nameInput.value.trim();
     const sid = sidInput.value.trim();
     const phone = phoneInput.value.trim();
+    const pin = pinInput ? pinInput.value.trim() : "";
 
     if (!name) {
         showToast("예약자 이름을 입력해주세요.", "error");
@@ -90,6 +92,11 @@ function submitReservation() {
     if (!phone || phone.length < 10) {
         showToast("올바른 연락처(휴대전화 번호)를 입력해주세요.", "error");
         phoneInput.focus();
+        return;
+    }
+    if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+        showToast("본인 확인용 비밀번호를 숫자 4자리로 입력해주세요.", "error");
+        if (pinInput) pinInput.focus();
         return;
     }
 
@@ -209,6 +216,7 @@ function submitReservation() {
         name: name,
         studentId: sid,
         phone: phone,
+        password: pin,
         status: "confirmed",
         createdAt: new Date().toISOString()
     };
@@ -276,9 +284,11 @@ function submitReservation() {
             }
 
             localStorage.setItem(LAST_SEARCH_KEY, sid);
+            sessionStorage.setItem("csu_res_session_pin", pin);
             closeReservationModal();
             nameInput.value = "";
             phoneInput.value = "";
+            if (pinInput) pinInput.value = "";
 
             openSuccessModal(newReservation);
             renderSlotsGrid();
@@ -293,9 +303,11 @@ function submitReservation() {
         saveAllReservations(updatedAll);
 
         localStorage.setItem(LAST_SEARCH_KEY, sid);
+        sessionStorage.setItem("csu_res_session_pin", pin);
         closeReservationModal();
         nameInput.value = "";
         phoneInput.value = "";
+        if (pinInput) pinInput.value = "";
         openSuccessModal(newReservation);
         renderSlotsGrid();
         syncDropdownsWithSelection();
@@ -334,6 +346,10 @@ function openSuccessModal(res) {
             <span class="rsc-label">예약자 정보</span>
             <strong class="rsc-val">${res.name} (${res.studentId})</strong>
         </div>
+        <div class="rsc-row">
+            <span class="rsc-label">본인 확인 비밀번호</span>
+            <strong class="rsc-val" style="color:var(--primary); font-weight:700;">${res.password ? res.password : '••••'} (4자리)</strong>
+        </div>
     `;
 
     modal.style.display = "flex";
@@ -351,43 +367,92 @@ function closeSuccessModalAndGo(screenId) {
 
 function initMyScreen() {
     const input = document.getElementById("search-student-id");
+    const pinInput = document.getElementById("search-pin");
     const saved = localStorage.getItem(LAST_SEARCH_KEY);
     if (saved && input && !input.value) {
         input.value = saved;
+    }
+    const sessionPin = sessionStorage.getItem("csu_res_session_pin");
+    if (sessionPin && pinInput && !pinInput.value) {
+        pinInput.value = sessionPin;
+    }
+    if (input && input.value && pinInput && pinInput.value) {
         searchMyReservations();
     }
 }
 
 function searchMyReservations() {
     const input = document.getElementById("search-student-id");
+    const pinInput = document.getElementById("search-pin");
     const container = document.getElementById("my-res-container");
     if (!input || !container) return;
 
     const query = input.value.trim();
+    const pin = pinInput ? pinInput.value.trim() : "";
+
     if (!query) {
-        showToast("학번 또는 전화번호를 입력해주세요.", "error");
+        showToast("학번을 입력해주세요.", "error");
         input.focus();
         return;
     }
 
+    if (!pin) {
+        showToast("비밀번호 4자리를 입력해주세요.", "error");
+        if (pinInput) pinInput.focus();
+        return;
+    }
+
+    if (pin.length !== 4) {
+        showToast("비밀번호는 숫자 4자리여야 합니다.", "error");
+        if (pinInput) pinInput.focus();
+        return;
+    }
+
     localStorage.setItem(LAST_SEARCH_KEY, query);
+    sessionStorage.setItem("csu_res_session_pin", pin);
     updateHeaderBadge();
 
     const cleanQuery = query.replace(/[^0-9]/g, "");
     const all = getAllReservations();
 
-    const matched = all.filter(r => {
+    // 1. 학번 또는 연락처로 해당 학생의 예약 검색
+    const studentReservations = all.filter(r => {
         const sid = (r.studentId || "").trim();
         const phClean = (r.phone || "").replace(/[^0-9]/g, "");
-        return sid === query || phClean === cleanQuery || phClean.includes(cleanQuery);
+        return sid === query || phClean === cleanQuery;
     });
 
-    if (matched.length === 0) {
+    if (studentReservations.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">🔍</div>
                 <h4>예약 내역이 없습니다</h4>
-                <p>'${escapeHtml(query)}'로 등록된 연습실 예약이 존재하지 않습니다.<br>학번이나 예약 시 입력한 전화번호를 다시 확인해주세요.</p>
+                <p>'${escapeHtml(query)}'로 등록된 연습실 예약이 존재하지 않습니다.<br>학번을 다시 확인해주세요.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // 2. 비밀번호(PIN) 검증
+    // 구 데이터(password 없는 예약)의 경우: 전화번호 뒷 4자리 또는 학번 뒷 4자리를 임시 암호로 인정하여 호환 지원
+    const matched = studentReservations.filter(r => {
+        if (r.password) {
+            return String(r.password).trim() === pin;
+        } else {
+            const ph = (r.phone || "").replace(/[^0-9]/g, "");
+            const ph4 = ph.length >= 4 ? ph.slice(-4) : "";
+            const sid4 = (r.studentId || "").slice(-4);
+            return pin === ph4 || pin === sid4;
+        }
+    });
+
+    if (matched.length === 0) {
+        showToast("비밀번호 4자리가 일치하지 않습니다.", "error");
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🔒</div>
+                <h4>비밀번호가 일치하지 않습니다</h4>
+                <p>해당 학번의 예약 내역이 존재하지만, <strong>비밀번호 4자리가 일치하지 않아</strong> 열람할 수 없습니다.<br>비밀번호를 분실하신 경우 학과 사무실/관리자에게 문의해주세요.</p>
             </div>
         `;
         return;
@@ -523,6 +588,17 @@ function closeCancelModal() {
 
 function executeCancellation() {
     if (!cancelTargetReservation) return;
+
+    if (cancelTargetReservation.password) {
+        const sessionPin = sessionStorage.getItem("csu_res_session_pin");
+        if (sessionPin !== cancelTargetReservation.password) {
+            const inputPin = prompt("예약 취소 본인 확인을 위해 4자리 비밀번호를 입력해주세요:");
+            if (!inputPin || inputPin.trim() !== cancelTargetReservation.password) {
+                alert("비밀번호가 일치하지 않아 예약을 취소할 수 없습니다.");
+                return;
+            }
+        }
+    }
 
     const all = getAllReservations();
     const idx = all.findIndex(r => r.id === cancelTargetReservation.id);

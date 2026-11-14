@@ -783,7 +783,12 @@ function renderReservationsTable() {
             <td><strong>${res.building}</strong></td>
             <td><span class="badge-room-type">${escapeHtml(res.roomType || '일반')}</span> <strong style="color:var(--primary); font-size:14px;">${res.room}호</strong></td>
             <td><strong>${escapeHtml(res.name)}</strong></td>
-            <td>${escapeHtml(res.studentId)}</td>
+            <td>
+                ${escapeHtml(res.studentId)}
+                <div style="font-size:11px; color:#2563eb; font-weight:700; margin-top:2px;" title="본인 확인용 4자리 비밀번호">
+                    🔑 PIN: ${escapeHtml(res.password || (res.phone ? res.phone.replace(/[^0-9]/g, "").slice(-4) : '없음'))}
+                </div>
+            </td>
             <td>${escapeHtml(res.phone)}</td>
             <td>
                 <span class="badge-status ${isCancelled ? 'cancelled' : 'confirmed'}">
@@ -854,7 +859,8 @@ function showReservationDetail(resId) {
     const res = all.find(r => r.id === resId);
     if (!res) return;
 
-    alert(`[예약 상세 정보]\n\n• 예약번호: ${res.id}\n• 일자: ${res.date}\n• 시간: ${res.startTime} ~ ${res.endTime}\n• 공간: ${res.building} ${res.room}호 (${res.roomType})\n• 예약자: ${res.name} (학번: ${res.studentId})\n• 연락처: ${res.phone}\n• 상태: ${res.status === 'confirmed' ? '예약확정' : '취소 완료'}\n• 신청시각: ${new Date(res.createdAt).toLocaleString()}\n${res.status === 'cancelled' ? `• 취소사유: ${res.cancelReason || '없음'}\n• 취소시각: ${new Date(res.cancelledAt || 0).toLocaleString()}` : ''}`);
+    const pin = res.password || (res.phone ? res.phone.replace(/[^0-9]/g, "").slice(-4) : '없음');
+    alert(`[예약 상세 정보]\n\n• 예약번호: ${res.id}\n• 일자: ${res.date}\n• 시간: ${res.startTime} ~ ${res.endTime}\n• 공간: ${res.building} ${res.room}호 (${res.roomType})\n• 예약자: ${res.name} (학번: ${res.studentId})\n• 연락처: ${res.phone}\n• 본인확인 PIN: ${pin}\n• 상태: ${res.status === 'confirmed' ? '예약확정' : '취소 완료'}\n• 신청시각: ${new Date(res.createdAt).toLocaleString()}\n${res.status === 'cancelled' ? `• 취소사유: ${res.cancelReason || '없음'}\n• 취소시각: ${new Date(res.cancelledAt || 0).toLocaleString()}` : ''}`);
 }
 
 // =================================================================

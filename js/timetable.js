@@ -446,6 +446,14 @@ function onSlotClick(slotIdx) {
         return;
     }
 
+    const lastSid = localStorage.getItem(LAST_SEARCH_KEY);
+    if (lastSid) {
+        const cdCheck = checkRoomCooldownConflict(dateKey, selectedBuilding, selectedRoom.number, clickedSlot.startMinutes, clickedSlot.endMinutes, lastSid, "");
+        if (cdCheck.hasConflict) {
+            showToast(`[대기시간 안내] ${selectedRoom.number}호는 이전 예약 2시간 뒤(${cdCheck.allowedAfterTime})부터 예약 가능합니다.`, "normal");
+        }
+    }
+
     const policies = getBookingPolicies();
     const maxAllowedSlots = Math.round((policies.maxDurationHours || 2) * 2);
     const maxHoursLabel = policies.maxDurationHours || 2;
@@ -677,3 +685,4 @@ function onEndTimeChange() {
     renderSlotsGrid();
     syncDropdownsWithSelection();
 }
+

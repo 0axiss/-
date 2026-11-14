@@ -443,7 +443,8 @@ function getBookingPolicies() {
         maxDailyBookingsPerUser: 2,
         bookingAdvanceDays: 0, // 당일 전용 (사전 예약 불가)
         cancelDeadlineMinutes: 30,
-        dailyOpenHour: 5 // 당일 예약 시스템 오픈 시각 (새벽 5시)
+        dailyOpenHour: 5, // 당일 예약 시스템 오픈 시각 (새벽 5시)
+        roomCooldownHours: 2 // 동일 연습실 재예약 대기 시간 (기본 2시간)
     };
 }
 
@@ -1438,6 +1439,8 @@ function renderPoliciesForm() {
     const p = getBookingPolicies();
     document.getElementById("policy-max-hours").value = p.maxDurationHours || 2;
     document.getElementById("policy-daily-max").value = p.maxDailyBookingsPerUser || 2;
+    const cooldownSelect = document.getElementById("policy-room-cooldown");
+    if (cooldownSelect) cooldownSelect.value = p.roomCooldownHours !== undefined ? p.roomCooldownHours : 2;
     document.getElementById("policy-advance-days").value = p.bookingAdvanceDays !== undefined ? p.bookingAdvanceDays : 0;
     document.getElementById("policy-cancel-minutes").value = p.cancelDeadlineMinutes !== undefined ? p.cancelDeadlineMinutes : 30;
     const openSelect = document.getElementById("policy-open-hour");
@@ -1447,6 +1450,7 @@ function renderPoliciesForm() {
 function savePolicies() {
     const maxHours = parseFloat(document.getElementById("policy-max-hours").value);
     const dailyMax = parseInt(document.getElementById("policy-daily-max").value, 10);
+    const cooldownHours = parseFloat(document.getElementById("policy-room-cooldown") ? document.getElementById("policy-room-cooldown").value : 2);
     const advanceDays = parseInt(document.getElementById("policy-advance-days").value, 10);
     const cancelMins = parseInt(document.getElementById("policy-cancel-minutes").value, 10);
     const openHour = parseInt(document.getElementById("policy-open-hour").value, 10);
@@ -1459,6 +1463,7 @@ function savePolicies() {
     const policies = {
         maxDurationHours: maxHours,
         maxDailyBookingsPerUser: dailyMax,
+        roomCooldownHours: isNaN(cooldownHours) ? 2 : cooldownHours,
         bookingAdvanceDays: advanceDays,
         cancelDeadlineMinutes: cancelMins,
         dailyOpenHour: isNaN(openHour) ? 5 : openHour,
@@ -1466,7 +1471,7 @@ function savePolicies() {
     };
 
     saveBookingPolicies(policies);
-    addAuditLog("POLICY_UPDATE", "예약 정책 변경", `1회 최대 ${maxHours}시간, 1일 최대 ${dailyMax}회, 사전 ${advanceDays}일, 취소마감 ${cancelMins}분전, 당일오픈 새벽 ${openHour}시`);
+    addAuditLog("POLICY_UPDATE", "예약 정책 변경", `1회 최대 ${maxHours}시간, 동일실 쿨다운 ${cooldownHours}시간, 1일 최대 ${dailyMax}회, 사전 ${advanceDays}일, 취소마감 ${cancelMins}분전, 당일오픈 새벽 ${openHour}시`);
     showAdminToast("예약 정책이 성공적으로 저장되었으며 학생 예약 시스템에 즉시 반영됩니다.", "success");
 }
 

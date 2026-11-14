@@ -12,7 +12,8 @@ function getBookingPolicies() {
                 maxDailyBookingsPerUser: parsed.maxDailyBookingsPerUser || 2,
                 bookingAdvanceDays: parsed.bookingAdvanceDays !== undefined ? Number(parsed.bookingAdvanceDays) : 0,
                 cancelDeadlineMinutes: parsed.cancelDeadlineMinutes !== undefined ? Number(parsed.cancelDeadlineMinutes) : 30,
-                dailyOpenHour: parsed.dailyOpenHour !== undefined ? Number(parsed.dailyOpenHour) : 5
+                dailyOpenHour: parsed.dailyOpenHour !== undefined ? Number(parsed.dailyOpenHour) : 5,
+                roomCooldownHours: parsed.roomCooldownHours !== undefined ? Number(parsed.roomCooldownHours) : 2
             };
         }
     } catch (e) {}
@@ -21,7 +22,8 @@ function getBookingPolicies() {
         maxDailyBookingsPerUser: 2,
         bookingAdvanceDays: 0,
         cancelDeadlineMinutes: 30,
-        dailyOpenHour: 5
+        dailyOpenHour: 5,
+        roomCooldownHours: 2
     };
 }
 
@@ -107,6 +109,85 @@ function checkOverlap(dateStr, building, roomNum, startMin, endMin, excludeId = 
     return { overlap: false };
 }
 
+/**
+ * 동일 학생의 동일 연습실 연속 독점 방지 쿨다운 검증
+ * (예: 9:00~11:00 예약 시 2시간 뒤인 13:00부터 재예약 가능)
+ */
+function checkRoomCooldownConflict(dateKey, building, roomNum, startMin, endMin, studentId, phone, reservationsList = null, excludeId = null) {
+    const policies = getBookingPolicies();
+    const cooldownHours = policies.roomCooldownHours !== undefined ? Number(policies.roomCooldownHours) : 2;
+    if (cooldownHours <= 0) {
+        return { hasConflict: false };
+    }
+    const cooldownMins = Math.round(cooldownHours * 60);
+
+    const list = reservationsList || getAllReservations();
+    const cleanPhone = phone ? phone.replace(/[^0-9]/g, "") : "";
+    const cleanSid = studentId ? String(studentId).trim() : "";
+
+    if (!cleanSid && !cleanPhone) {
+        return { hasConflict: false };
+    }
+
+    for (const r of list) {
+        if (r.status === "cancelled") continue;
+        if (excludeId && r.id === excludeId) continue;
+        if (r.date !== dateKey) continue;
+        if (r.building !== building || r.room !== roomNum) continue;
+
+        // 동일 학생 여부 (학번 또는 연락처 일치)
+        const rPhone = r.phone ? r.phone.replace(/[^0-9]/g, "") : "";
+        const rSid = r.studentId ? String(r.studentId).trim() : "";
+
+        const isSameStudent = (cleanSid && rSid && cleanSid === rSid) ||
+                              (cleanPhone && rPhone && cleanPhone === rPhone);
+
+        if (!isSameStudent) continue;
+
+        const pStart = r.startMin !== undefined ? r.startMin : timeStrToMinutes(r.startTime);
+        const pEnd = r.endMin !== undefined ? r.endMin : timeStrToMinutes(r.endTime);
+
+        // 1. 기존 예약 종료 직후 쿨다운 미경과 검사 (이전 예약 종료 후 cooldownMins 지나야 시작 가능)
+        if (startMin >= pEnd && startMin < pEnd + cooldownMins) {
+            const allowedAfter = minutesToTimeStr(pEnd + cooldownMins);
+            return {
+                hasConflict: true,
+                type: "after",
+                prevBooking: r,
+                cooldownHours: cooldownHours,
+                allowedAfterTime: allowedAfter,
+                message: `[동일 연습실 재예약 대기 시간 안내]\n독점 방지 정책에 따라 동일 연습실(${building} ${roomNum}호)은 이전 예약(${r.startTime}~${r.endTime}) 종료 후 ${cooldownHours}시간 뒤인 ${allowedAfter}부터 재예약할 수 있습니다.`
+            };
+        }
+
+        // 2. 기존 예약 시작 직전 쿨다운 미경과 검사 (새 예약 종료 시점이 기존 예약 시작 전 cooldownMins 이전이어야 함)
+        if (endMin <= pStart && endMin > pStart - cooldownMins) {
+            const allowedBefore = minutesToTimeStr(Math.max(0, pStart - cooldownMins));
+            return {
+                hasConflict: true,
+                type: "before",
+                prevBooking: r,
+                cooldownHours: cooldownHours,
+                allowedBeforeTime: allowedBefore,
+                message: `[동일 연습실 재예약 대기 시간 안내]\n독점 방지 정책에 따라 동일 연습실(${building} ${roomNum}호)은 기존 예약(${r.startTime}~${r.endTime}) 시작 ${cooldownHours}시간 전인 ${allowedBefore} 이전에만 예약할 수 있습니다.`
+            };
+        }
+
+        // 3. 중복 시간대 검사 (시간 겹침)
+        if (startMin < pEnd && endMin > pStart) {
+            return {
+                hasConflict: true,
+                type: "overlap",
+                prevBooking: r,
+                cooldownHours: cooldownHours,
+                message: `이미 본인이 신청한 기존 예약(${r.startTime}~${r.endTime})과 시간이 겹칩니다.`
+            };
+        }
+    }
+
+    return { hasConflict: false };
+}
+
 function generateSampleData() {
     const sampleList = [
         {
@@ -182,3 +263,4 @@ function generateSampleData() {
     saveAllReservations(sampleList);
     return sampleList;
 }
+

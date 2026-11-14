@@ -591,3 +591,4 @@ function renderOverviewDashboard() {
         roomsList.appendChild(floorSec);
     });
 }
+

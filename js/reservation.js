@@ -49,6 +49,13 @@ function openReservationModal() {
     if (lastSid) {
         const idInput = document.getElementById("input-res-sid");
         if (idInput && !idInput.value) idInput.value = lastSid;
+
+        // 동일 학생의 동일 연습실 쿨다운 대기 확인
+        const cdCheck = checkRoomCooldownConflict(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin, lastSid, "");
+        if (cdCheck.hasConflict) {
+            alert(cdCheck.message);
+            return;
+        }
     }
 
     const modal = document.getElementById("reservation-modal");
@@ -164,6 +171,13 @@ function submitReservation() {
         return;
     }
 
+    // 정책 검증 4: 동일 연습실 연속 예약 방지 쿨다운 검증 (이전 예약 종료 후 일정 시간 대기)
+    const cooldownCheck = checkRoomCooldownConflict(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin, sid, phone, all);
+    if (cooldownCheck.hasConflict) {
+        alert(cooldownCheck.message);
+        return;
+    }
+
     // 로컬 사전 중복 체크
     const preCheck = checkOverlap(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin);
     if (preCheck.overlap) {
@@ -221,6 +235,12 @@ function submitReservation() {
             });
 
             if (serverConflict) {
+                return; // abort transaction
+            }
+
+            // 서버 트랜잭션 내 동일 학생 쿨다운 검증 (독점 방지)
+            const serverCooldown = checkRoomCooldownConflict(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin, sid, phone, list);
+            if (serverCooldown.hasConflict) {
                 return; // abort transaction
             }
 
@@ -527,3 +547,4 @@ function executeCancellation() {
         renderOverviewDashboard();
     }
 }
+

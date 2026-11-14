@@ -498,3 +498,4 @@ function submitInquiryPost() {
 
     switchBoardCategory("inquiry");
 }
+

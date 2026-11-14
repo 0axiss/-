@@ -1434,6 +1434,7 @@ function submitReservation() {
     const nameInput = document.getElementById("input-res-name");
     const sidInput = document.getElementById("input-res-sid");
     const phoneInput = document.getElementById("input-res-phone");
+    const submitBtn = document.getElementById("btn-submit-booking");
 
     const name = nameInput.value.trim();
     const sid = sidInput.value.trim();
@@ -1462,8 +1463,8 @@ function submitReservation() {
     const dateKey = formatDateKey(selectedDate);
 
     // 정책 검증 0: 일요일 완전 차단 및 당일 예약 오픈 검사
-    const targetDateObj = new Date(selectedDate);
-    if (targetDateObj.getDay() === 0) {
+    const targetDateObj0 = new Date(selectedDate);
+    if (targetDateObj0.getDay() === 0) {
         alert("일요일은 연습실을 운영하지 않습니다. (예약 불가)");
         return;
     }
@@ -1491,9 +1492,9 @@ function submitReservation() {
     const policies = getBookingPolicies();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const targetDateObj = new Date(selectedDate);
-    targetDateObj.setHours(0, 0, 0, 0);
-    const diffDays = Math.round((targetDateObj - today) / (1000 * 60 * 60 * 24));
+    const targetDateObj1 = new Date(selectedDate);
+    targetDateObj1.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((targetDateObj1 - today) / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
         showToast("지난 날짜는 예약할 수 없습니다.", "error");
@@ -1520,28 +1521,24 @@ function submitReservation() {
     }
 
     // 정책 검증 3: 동일 학생의 타 연습실 동시간대 중복 예약 방지 (건물/층/호실 무관)
-    // 예: 신관 5층에서 11:00에 예약 중이면 다른 건물이나 신관의 다른 연습실에서 겹치는 시간대 예약 불가
     const timeConflictBooking = myTodayBookings.find(r => {
         const rStartMin = r.startMin !== undefined ? r.startMin : timeStrToMinutes(r.startTime);
         const rEndMin = r.endMin !== undefined ? r.endMin : timeStrToMinutes(r.endTime);
-        // 시간이 겹치는 조건 (StartA < EndB && EndA > StartB)
         return (startMin < rEndMin && endMin > rStartMin);
     });
 
     if (timeConflictBooking) {
         const bldName = timeConflictBooking.building || "연습실";
         const roomName = timeConflictBooking.room ? `${timeConflictBooking.room}호` : "";
-        const floorName = timeConflictBooking.floor ? `(${timeConflictBooking.floor})` : "";
-
         alert(`[중복 예약 불가]\n이미 동일한 시간대에 ${bldName} ${roomName} (${timeConflictBooking.startTime}~${timeConflictBooking.endTime}) 예약이 있습니다.\n기존 예약을 취소하신 후 다시 신청해주세요.`);
         return;
     }
 
-    // 다시 한 번 엄격한 중복 체크
-    const check = checkOverlap(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin);
-    if (check.overlap) {
-        if (check.conflict && check.conflict.isBlocked) {
-            alert(`해당 시간대는 시설 점검(${check.conflict.name})으로 인해 예약할 수 없습니다.`);
+    // 로컬 사전 중복 체크 (시설 점검 차단 포함)
+    const preCheck = checkOverlap(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin);
+    if (preCheck.overlap) {
+        if (preCheck.conflict && preCheck.conflict.isBlocked) {
+            alert(`해당 시간대는 시설 점검(${preCheck.conflict.name})으로 인해 예약할 수 없습니다.`);
         } else {
             alert("죄송합니다. 방금 다른 학생이 해당 시간을 예약하였습니다. 다른 시간을 선택해주세요.");
         }
@@ -1572,28 +1569,105 @@ function submitReservation() {
         createdAt: new Date().toISOString()
     };
 
-    // 저장소에 저장
-    const updatedAll = getAllReservations();
-    updatedAll.push(newReservation);
-    saveAllReservations(updatedAll);
+    // ★ Firebase 트랜잭션 기반 원자적 예약 (동시접속 충돌 방지)
+    if (typeof remoteDb !== "undefined" && remoteDb && isRemoteSyncReady) {
+        // 버튼 비활성화 (중복 클릭 방지)
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            const btnSpan = submitBtn.querySelector("span");
+            if (btnSpan) btnSpan.textContent = "예약 처리 중...";
+        }
 
-    // 마지막 학번 기억
-    localStorage.setItem(LAST_SEARCH_KEY, sid);
+        remoteDb.ref("reservations").transaction(function(currentData) {
+            // currentData: Firebase에 저장된 최신 예약 배열 (서버 기준)
+            const list = currentData ? (Array.isArray(currentData) ? currentData : Object.values(currentData)) : [];
 
-    // 모달 닫기
-    closeReservationModal();
+            // 서버 기준 실시간 중복 체크: 같은 날짜, 같은 건물, 같은 방에서 시간이 겹치는 예약이 있는지 확인
+            const serverConflict = list.some(r => {
+                if (r.status === "cancelled") return false;
+                if (r.date !== dateKey) return false;
+                if (r.building !== selectedBuilding) return false;
+                if (r.room !== selectedRoom.number) return false;
+                const rStart = r.startMin !== undefined ? r.startMin : timeStrToMinutes(r.startTime);
+                const rEnd = r.endMin !== undefined ? r.endMin : timeStrToMinutes(r.endTime);
+                return (startMin < rEnd && endMin > rStart);
+            });
 
-    // 폼 초기화
-    nameInput.value = "";
-    phoneInput.value = "";
+            if (serverConflict) {
+                // 충돌 발견 → 트랜잭션 중단 (undefined 반환으로 abort)
+                return; // undefined = abort transaction
+            }
 
-    // 예약 완료 확인증 팝업 표시
-    openSuccessModal(newReservation);
+            // 충돌 없음 → 새 예약 추가
+            list.push(newReservation);
+            return list;
 
-    // 현재 화면 슬롯 즉시 재렌더링
-    renderSlotsGrid();
-    syncDropdownsWithSelection();
-    showToast("예약이 즉시 확정되었습니다!", "success");
+        }, function(error, committed, snapshot) {
+            // 버튼 복구
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                const btnSpan = submitBtn.querySelector("span");
+                if (btnSpan) btnSpan.textContent = "즉시 예약 확정하기";
+            }
+
+            if (error) {
+                console.error("예약 트랜잭션 오류:", error);
+                alert("네트워크 오류로 예약에 실패했습니다. 다시 시도해주세요.");
+                return;
+            }
+
+            if (!committed) {
+                // 트랜잭션이 중단됨 = 다른 학생이 먼저 예약한 시간대
+                alert("죄송합니다. 방금 다른 학생이 해당 시간을 예약하였습니다.\n다른 시간을 선택해주세요.");
+                closeReservationModal();
+                renderSlotsGrid();
+                syncDropdownsWithSelection();
+                return;
+            }
+
+            // 트랜잭션 성공 → 로컬 동기화 (Firebase 리스너가 자동으로 UI를 갱신하지만 즉시 반영)
+            const serverList = snapshot.val();
+            if (serverList) {
+                const arr = Array.isArray(serverList) ? serverList : Object.values(serverList);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+                updateHeaderBadge();
+            }
+
+            // 마지막 학번 기억
+            localStorage.setItem(LAST_SEARCH_KEY, sid);
+
+            // 모달 닫기
+            closeReservationModal();
+
+            // 폼 초기화
+            nameInput.value = "";
+            phoneInput.value = "";
+
+            // 예약 완료 확인증 팝업 표시
+            openSuccessModal(newReservation);
+
+            // 현재 화면 슬롯 즉시 재렌더링
+            renderSlotsGrid();
+            syncDropdownsWithSelection();
+            showToast("예약이 즉시 확정되었습니다!", "success");
+
+        }, false); // applyLocally = false → 서버 확정 후에만 로컬에 반영
+
+    } else {
+        // Firebase 연결 없음 → 기존 로컬 저장 방식 (오프라인 폴백)
+        const updatedAll = getAllReservations();
+        updatedAll.push(newReservation);
+        saveAllReservations(updatedAll);
+
+        localStorage.setItem(LAST_SEARCH_KEY, sid);
+        closeReservationModal();
+        nameInput.value = "";
+        phoneInput.value = "";
+        openSuccessModal(newReservation);
+        renderSlotsGrid();
+        syncDropdownsWithSelection();
+        showToast("예약이 즉시 확정되었습니다!", "success");
+    }
 }
 
 function openSuccessModal(res) {

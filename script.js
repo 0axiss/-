@@ -198,10 +198,27 @@ function getRoomSettings() {
     }
 }
 
-// 새벽 05:00 당일 예약 오픈 상태 및 날짜 판별 (오직 당일 새벽 5시 이후에만 예약 가능)
+// 새벽 05:00 당일 예약 오픈 상태 및 날짜 판별 (일요일 휴관 / 오직 당일 새벽 5시 이후에만 예약 가능)
 function checkDailyOpenStatus(targetDateStr) {
     const policies = getBookingPolicies();
     const openHour = policies.dailyOpenHour !== undefined ? Number(policies.dailyOpenHour) : 5;
+
+    // 0. 일요일: 상시 예약 완전 차단 (휴관)
+    const targetDateObj = new Date(targetDateStr + "T00:00:00");
+    if (targetDateObj.getDay() === 0) {
+        return {
+            isOpen: false,
+            isSunday: true,
+            statusType: "SUNDAY",
+            openHour: openHour,
+            title: "일요일 휴관",
+            badgeText: "🔒",
+            subText: "",
+            alertClass: "sunday",
+            alertIcon: "🔒",
+            message: "일요일은 연습실을 운영하지 않습니다."
+        };
+    }
 
     const now = new Date();
     const todayStr = formatDateKey(now);
@@ -213,12 +230,12 @@ function checkDailyOpenStatus(targetDateStr) {
             isPast: true,
             statusType: "PAST",
             openHour: openHour,
-            title: "지난 날짜 (조회 전용)",
-            badgeText: "조회 전용",
-            subText: "🔒 지난 날짜는 예약할 수 없습니다 (조회 전용)",
+            title: "지난 날짜",
+            badgeText: "🔒",
+            subText: "",
             alertClass: "past",
-            alertIcon: "📅",
-            message: "지난 날짜는 예약 현황 조회만 가능하며 예약할 수 없습니다."
+            alertIcon: "🔒",
+            message: "지난 날짜는 예약할 수 없습니다."
         };
     }
 
@@ -229,12 +246,12 @@ function checkDailyOpenStatus(targetDateStr) {
             isFuture: true,
             statusType: "FUTURE",
             openHour: openHour,
-            title: "당일 예약제 (사전 예약 불가)",
-            badgeText: "당일 오픈",
-            subText: `🔒 해당 날짜 당일 새벽 0${openHour}:00부터 예약 가능 (조회 전용)`,
+            title: "당일 예약제",
+            badgeText: "🔒",
+            subText: "",
             alertClass: "future",
             alertIcon: "🔒",
-            message: `사전 예약은 지원되지 않습니다. 연습실 예약은 이용 당일 새벽 0${openHour}:00부터 가능합니다. (현재는 현황 조회만 가능)`
+            message: `연습실 예약은 이용 당일 새벽 0${openHour}:00부터 가능합니다.`
         };
     }
 
@@ -246,11 +263,11 @@ function checkDailyOpenStatus(targetDateStr) {
             statusType: "BEFORE_OPEN",
             openHour: openHour,
             title: "당일 예약 오픈 대기 중",
-            badgeText: "오픈 대기",
-            subText: `🔒 새벽 0${openHour}:00 이후 예약 가능 (현재 예약 불가 시간)`,
+            badgeText: "🔒",
+            subText: "",
             alertClass: "before-open",
-            alertIcon: "⏰",
-            message: `당일 연습실 예약 시스템은 매일 새벽 0${openHour}:00에 정식 오픈됩니다. (새벽 5시 이후 예약 가능)`
+            alertIcon: "🔒",
+            message: `새벽 0${openHour}:00 이후 예약 가능합니다.`
         };
     }
 
@@ -747,28 +764,27 @@ function updateDateDisplay() {
 
     const dnDisplayDate = document.getElementById("dn-display-date");
     const dnDisplayDay = document.getElementById("dn-display-day");
+    const dnStatusBadge = document.getElementById("dn-status-badge");
 
     if (dnDisplayDate) dnDisplayDate.textContent = dateStr;
     if (dnDisplayDay) {
-        let tagText = dayStr;
+        dnDisplayDay.textContent = dayStr;
         if (openStatus.isOpen) {
-            tagText = `${dayStr} · 오늘 (예약 가능)`;
             dnDisplayDay.style.background = "#dcfce7";
             dnDisplayDay.style.color = "#15803d";
-        } else if (openStatus.statusType === "FUTURE") {
-            tagText = `${dayStr} · 내일/미래 (조회 전용)`;
-            dnDisplayDay.style.background = "#eff6ff";
-            dnDisplayDay.style.color = "#1d4ed8";
-        } else if (openStatus.statusType === "PAST") {
-            tagText = `${dayStr} · 어제/과거 (조회 전용)`;
-            dnDisplayDay.style.background = "#f3f4f6";
-            dnDisplayDay.style.color = "#4b5563";
-        } else if (openStatus.statusType === "BEFORE_OPEN") {
-            tagText = `${dayStr} · 오늘 (새벽 0${openStatus.openHour}:00 오픈)`;
-            dnDisplayDay.style.background = "#fef2f2";
-            dnDisplayDay.style.color = "#b91c1c";
+        } else {
+            dnDisplayDay.style.background = "#f1f5f9";
+            dnDisplayDay.style.color = "#475569";
         }
-        dnDisplayDay.textContent = tagText;
+    }
+
+    if (dnStatusBadge) {
+        if (!openStatus.isOpen) {
+            dnStatusBadge.style.display = "inline-flex";
+            dnStatusBadge.textContent = "🔒 예약 불가";
+        } else {
+            dnStatusBadge.style.display = "none";
+        }
     }
 
     // 네이티브 date input 동기화
@@ -820,27 +836,6 @@ function renderSlotsGrid() {
 
     // 당일 새벽 05:00 오픈 여부 확인
     const openStatus = checkDailyOpenStatus(dateKey);
-
-    // 예약 불가 상태 알림 배너 렌더링 (과거, 미래, 오픈 대기)
-    if (!openStatus.isOpen) {
-        const alertDiv = document.createElement("div");
-        alertDiv.className = `daily-open-alert ${openStatus.alertClass || ''}`;
-        
-        let alertDesc = "";
-        if (openStatus.statusType === "PAST") {
-            alertDesc = `<strong>📅 지난 날짜 예약 현황 (조회 전용)</strong><br>과거 날짜는 연습실 예약 현황 확인만 가능하며 신규 예약 신청은 불가합니다.`;
-        } else if (openStatus.statusType === "FUTURE") {
-            alertDesc = `<strong>🔒 당일 예약제 운영 안내 (조회 전용)</strong><br>연습실 예약은 <strong>이용 당일 새벽 0${openStatus.openHour}:00부터</strong> 가능합니다. 사전 예약은 지원되지 않으며 현황 확인만 가능합니다.`;
-        } else {
-            alertDesc = `<strong>⏰ 당일 예약 오픈 대기 안내</strong><br>오늘의 연습실 예약 시스템은 <strong>매일 새벽 0${openStatus.openHour}:00</strong>에 정식 오픈됩니다. (새벽 5시 이후 예약 가능)`;
-        }
-
-        alertDiv.innerHTML = `
-            <span>${openStatus.alertIcon || '⚠️'}</span>
-            <div>${alertDesc}</div>
-        `;
-        container.appendChild(alertDiv);
-    }
 
     // 해당 날짜, 해당 방의 활성 예약 목록
     const activeRes = getActiveReservations(dateKey, selectedBuilding, selectedRoom.number);
@@ -957,18 +952,10 @@ function renderSlotsGrid() {
                 dotColor = "#ef4444";
                 badgeStyle = "background:#fee2e2; color:#991b1b; border:1px solid #fecaca;";
             } else if (!openStatus.isOpen) {
-                badgeText = openStatus.badgeText;
-                subText = openStatus.subText;
-                if (openStatus.statusType === "FUTURE") {
-                    dotColor = "#3b82f6";
-                    badgeStyle = "background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;";
-                } else if (openStatus.statusType === "PAST") {
-                    dotColor = "#9ca3af";
-                    badgeStyle = "background:#f3f4f6; color:#4b5563; border:1px solid #e5e7eb;";
-                } else {
-                    dotColor = "#ef4444";
-                    badgeStyle = "background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;";
-                }
+                badgeText = "🔒";
+                subText = "";
+                dotColor = "#9ca3af";
+                badgeStyle = "background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0;";
             } else if (isPastSlot) {
                 badgeText = "시간 경과";
                 subText = "⏱️ 이용 시간이 지난 슬롯입니다";
@@ -994,7 +981,7 @@ function renderSlotsGrid() {
                         <span class="tt-slot-dot" style="${dotColor ? `background:${dotColor};` : ''}"></span>
                         <span class="tt-slot-time">${slot.startStr} ~ ${slot.endStr}</span>
                     </div>
-                    <span class="tt-slot-subtext">${subText}</span>
+                    ${subText ? `<span class="tt-slot-subtext">${subText}</span>` : ''}
                 </div>
                 <span class="tt-slot-badge" style="${badgeStyle}">${badgeText}</span>
             `;
@@ -1024,19 +1011,9 @@ function renderSlotsGrid() {
     const counterEl = document.getElementById("tt-avail-counter");
     if (counterEl) {
         if (!openStatus.isOpen) {
-            if (openStatus.statusType === "PAST") {
-                counterEl.textContent = "📅 지난 날짜 (조회 전용)";
-                counterEl.style.background = "#f3f4f6";
-                counterEl.style.color = "#4b5563";
-            } else if (openStatus.statusType === "FUTURE") {
-                counterEl.textContent = `🔒 당일 새벽 0${openStatus.openHour}:00 오픈 (사전 예약 불가)`;
-                counterEl.style.background = "#eff6ff";
-                counterEl.style.color = "#1d4ed8";
-            } else {
-                counterEl.textContent = `🔒 새벽 0${openStatus.openHour}:00 오픈 전 (예약 대기)`;
-                counterEl.style.background = "#fef2f2";
-                counterEl.style.color = "#b91c1c";
-            }
+            counterEl.textContent = "🔒";
+            counterEl.style.background = "#f1f5f9";
+            counterEl.style.color = "#64748b";
         } else if (currentSelectedCount > 0) {
             const h = Math.floor((currentSelectedCount * 30) / 60);
             const m = (currentSelectedCount * 30) % 60;
@@ -1059,9 +1036,7 @@ function renderSlotsGrid() {
         reserveBtn.disabled = true;
         const btnSpan = reserveBtn.querySelector(".btn-text");
         if (btnSpan) {
-            if (openStatus.statusType === "PAST") btnSpan.textContent = "지난 날짜는 예약 불가 (조회 전용)";
-            else if (openStatus.statusType === "FUTURE") btnSpan.textContent = `이용 당일 새벽 0${openStatus.openHour}:00부터 예약 가능`;
-            else btnSpan.textContent = `새벽 0${openStatus.openHour}:00 오픈 후 예약 가능`;
+            btnSpan.textContent = "🔒";
         }
     }
 
@@ -1226,34 +1201,16 @@ function syncDropdownsWithSelection() {
     if (!openStatus.isOpen) {
         startSelect.disabled = true;
         endSelect.disabled = true;
-        startSelect.innerHTML = `<option value="">선택 불가 (조회 전용)</option>`;
-        endSelect.innerHTML = `<option value="">선택 불가 (조회 전용)</option>`;
+        startSelect.innerHTML = `<option value="">🔒</option>`;
+        endSelect.innerHTML = `<option value="">🔒</option>`;
 
-        let summaryText = "";
-        let badgeLabel = "";
-        let btnText = "";
-
-        if (openStatus.statusType === "PAST") {
-            summaryText = "지난 날짜는 예약 현황 확인만 가능합니다. (예약 신청 불가)";
-            badgeLabel = "과거 조회";
-            btnText = "지난 날짜는 예약 불가 (조회 전용)";
-        } else if (openStatus.statusType === "FUTURE") {
-            summaryText = `사전 예약은 지원되지 않으며, 이용 당일 새벽 0${openStatus.openHour}:00부터 예약 가능합니다.`;
-            badgeLabel = "사전예약 불가";
-            btnText = `이용 당일 새벽 0${openStatus.openHour}:00부터 예약 가능`;
-        } else {
-            summaryText = `매일 새벽 0${openStatus.openHour}:00에 당일 예약 시스템이 오픈됩니다.`;
-            badgeLabel = "오픈 대기";
-            btnText = `새벽 0${openStatus.openHour}:00 오픈 후 예약 가능`;
-        }
-
-        if (timeSummary) timeSummary.textContent = summaryText;
-        if (statusBadge) statusBadge.textContent = badgeLabel;
+        if (timeSummary) timeSummary.textContent = "🔒";
+        if (statusBadge) statusBadge.textContent = "🔒";
         if (summaryBox) summaryBox.classList.remove("error");
         if (reserveBtn) {
             reserveBtn.disabled = true;
             const btnSpan = reserveBtn.querySelector(".btn-text");
-            if (btnSpan) btnSpan.textContent = btnText;
+            if (btnSpan) btnSpan.textContent = "🔒";
         }
         return;
     }
@@ -1361,7 +1318,7 @@ function updateEndSelectOptions() {
     if (validEndTimes.length === 0) {
         const opt = document.createElement("option");
         opt.value = "";
-        opt.textContent = "예약 불가(시간 중복)";
+        opt.textContent = "🔒 시간 중복";
         endSelect.appendChild(opt);
         return;
     }
@@ -1504,16 +1461,22 @@ function submitReservation() {
     const endMin = timeStrToMinutes(endStr);
     const dateKey = formatDateKey(selectedDate);
 
-    // 정책 검증 0: 당일 예약 및 새벽 오픈 검사
+    // 정책 검증 0: 일요일 완전 차단 및 당일 예약 오픈 검사
+    const targetDateObj = new Date(selectedDate);
+    if (targetDateObj.getDay() === 0) {
+        alert("일요일은 연습실을 운영하지 않습니다. (예약 불가)");
+        return;
+    }
+
     const openStatus = checkDailyOpenStatus(dateKey);
     if (!openStatus.isOpen) {
-        alert(`[예약 불가 안내]\n${openStatus.message}`);
+        alert(openStatus.message);
         return;
     }
 
     const todayStr = formatDateKey(new Date());
     if (dateKey !== todayStr) {
-        alert("[예약 불가 안내]\n연습실 예약은 오직 이용 당일(오늘)만 신청할 수 있습니다.\n(어제나 내일 등 다른 날짜는 현황 조회만 가능합니다)");
+        alert("연습실 예약은 오직 이용 당일(오늘)만 신청할 수 있습니다.");
         return;
     }
 

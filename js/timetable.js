@@ -190,6 +190,7 @@ function renderSlotsGrid() {
     track.className = "timetable-track";
 
     let availableSlotCount = 0;
+    let firstAvailableCardRef = null; // 첫 번째 예약 가능 슬롯 참조 (자동 스크롤용)
     const currentSelectedCount = (selectedStartSlotIdx !== null && selectedEndSlotIdx !== null)
         ? (selectedEndSlotIdx - selectedStartSlotIdx + 1)
         : 0;
@@ -325,6 +326,11 @@ function renderSlotsGrid() {
 
             if (openStatus.isOpen && !isReserved && !isPastSlot) {
                 card.onclick = () => onSlotClick(slot.index);
+                // 첫 번째 예약 가능 슬롯에 마킹 (자동 스크롤 대상)
+                if (!firstAvailableCardRef) {
+                    firstAvailableCardRef = card;
+                    card.setAttribute("data-first-available", "true");
+                }
             } else if (!openStatus.isOpen) {
                 card.onclick = () => showToast(openStatus.message, "error");
             } else if (blockedSlotInfo) {
@@ -343,6 +349,16 @@ function renderSlotsGrid() {
     }
 
     container.appendChild(track);
+
+    // 오늘 날짜이고 예약 가능한 슬롯이 있으면, 첫 번째 예약 가능 슬롯으로 자동 스크롤
+    if (firstAvailableCardRef && openStatus.isOpen) {
+        // 약간의 지연 후 스크롤 (DOM 렌더링 완료 후 작동하도록)
+        setTimeout(() => {
+            const cardTop = firstAvailableCardRef.getBoundingClientRect().top + window.scrollY;
+            const offset = 100; // 헤더 고정 오프셋
+            window.scrollTo({ top: cardTop - offset, behavior: "smooth" });
+        }, 60);
+    }
 
     const counterEl = document.getElementById("tt-avail-counter");
     if (counterEl) {

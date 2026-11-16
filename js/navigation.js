@@ -500,25 +500,33 @@ function renderOverviewDashboard() {
     const isToday = formatDateKey(now) === dateKey;
     const nowMins = now.getHours() * 60 + now.getMinutes();
 
+    const roomSettings = getRoomSettings();
     let busyRoomsNow = 0;
-    if (isToday) {
-        b.floors.forEach(f => {
-            f.rooms.forEach(r => {
+    let disabledRoomsCount = 0;
+
+    b.floors.forEach(f => {
+        f.rooms.forEach(r => {
+            const rKey = `${overviewBuilding}_${r.number}`;
+            const isAvail = !roomSettings[rKey] || roomSettings[rKey].isAvailable !== false;
+            if (!isAvail) {
+                disabledRoomsCount++;
+            } else if (isToday) {
                 const isBusy = activeRes.some(res => {
                     return res.room === r.number && nowMins >= res.startMin && nowMins < res.endMin;
                 });
                 if (isBusy) busyRoomsNow++;
-            });
+            }
         });
-    }
+    });
 
-    const availableNow = totalRooms - busyRoomsNow;
+    const activeRoomsTotal = Math.max(0, totalRooms - disabledRoomsCount);
+    const availableNow = Math.max(0, activeRoomsTotal - busyRoomsNow);
     const totalResCount = activeRes.length;
 
     if (statsRow) {
         statsRow.innerHTML = `
             <div class="stat-pill">전체 <strong>${totalRooms}</strong>실</div>
-            <div class="stat-pill avail">지금 예약가능 <strong>${isToday ? availableNow : totalRooms}</strong>실</div>
+            <div class="stat-pill avail">지금 예약가능 <strong>${isToday ? availableNow : activeRoomsTotal}</strong>실</div>
             <div class="stat-pill reserved">오늘 예약 <strong>${totalResCount}</strong>건</div>
         `;
     }
@@ -535,7 +543,6 @@ function renderOverviewDashboard() {
         title.textContent = `${floor.name} (${floor.title}) · ${floor.rooms.length}실`;
         floorSec.appendChild(title);
 
-        const roomSettings = getRoomSettings();
         const sortedRooms = [...floor.rooms].sort((a, b) => {
             const aKey = `${overviewBuilding}_${a.number}`;
             const bKey = `${overviewBuilding}_${b.number}`;
@@ -566,11 +573,29 @@ function renderOverviewDashboard() {
             const isCurrentlyOccupied = isToday && roomRes.some(r => nowMins >= r.startMin && nowMins < r.endMin);
 
             let barSegmentsHtml = "";
-            roomRes.forEach(r => {
-                const leftPercent = ((r.startMin - OPERATING_START_HOUR * 60) / totalDayMins) * 100;
-                const widthPercent = ((r.endMin - r.startMin) / totalDayMins) * 100;
-                barSegmentsHtml += `<div class="orc-booked-segment" style="left:${leftPercent}%; width:${widthPercent}%;" title="${r.startTime}~${r.endTime}"></div>`;
-            });
+            if (!isRoomAvailable) {
+                barSegmentsHtml = `<div class="orc-blocked-full" style="width:100%; height:100%; background:repeating-linear-gradient(45deg, #f1f5f9, #f1f5f9 6px, #e2e8f0 6px, #e2e8f0 12px); border-radius:4px;" title="이용 불가"></div>`;
+            } else {
+                roomRes.forEach(r => {
+                    const leftPercent = ((r.startMin - OPERATING_START_HOUR * 60) / totalDayMins) * 100;
+                    const widthPercent = ((r.endMin - r.startMin) / totalDayMins) * 100;
+                    barSegmentsHtml += `<div class="orc-booked-segment" style="left:${leftPercent}%; width:${widthPercent}%;" title="${r.startTime}~${r.endTime}"></div>`;
+                });
+            }
+
+            let badgeText = "예약가능";
+            let badgeClass = "orc-badge";
+
+            if (!isRoomAvailable) {
+                badgeText = "예약 불가";
+                badgeClass = "orc-badge disabled";
+            } else if (isCurrentlyOccupied) {
+                badgeText = "사용중";
+                badgeClass = "orc-badge busy";
+            } else if (roomRes.length > 0) {
+                badgeText = `${roomRes.length}건 예약`;
+                badgeClass = "orc-badge";
+            }
 
             card.innerHTML = `
                 <div class="orc-info">
@@ -580,8 +605,8 @@ function renderOverviewDashboard() {
                 <div class="orc-timeline-bar">
                     ${barSegmentsHtml}
                 </div>
-                <span class="orc-badge ${isCurrentlyOccupied ? 'busy' : ''}">
-                    ${isCurrentlyOccupied ? '사용중' : (roomRes.length > 0 ? `${roomRes.length}건 예약` : '예약가능')}
+                <span class="${badgeClass}">
+                    ${badgeText}
                 </span>
             `;
 

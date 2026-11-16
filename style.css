@@ -1667,6 +1667,12 @@ select {
     color: var(--gray-600);
 }
 
+.orc-badge.disabled {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
 /* -------------------------------------------------------------
    SCREEN 6: 내 예약 확인 및 취소 (My Screen)
 ------------------------------------------------------------- */

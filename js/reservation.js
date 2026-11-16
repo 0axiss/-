@@ -199,6 +199,25 @@ function submitReservation() {
         return;
     }
 
+    // 고정예약 사전 체크
+    const preFixed = checkFixedReservationConflict(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin);
+    if (preFixed.hasConflict) {
+        alert(`해당 시간대는 고정 예약(${preFixed.fixed.title || '레슨'}) 시간대로 예약할 수 없습니다.`);
+        closeReservationModal();
+        renderSlotsGrid();
+        return;
+    }
+
+    // 층 전체 정기 이용금지 사전 체크
+    const preFloor = checkFloorProhibitionConflict(dateKey, selectedBuilding, selectedFloor.name, startMin, endMin);
+    if (preFloor.hasConflict) {
+        const floorLbl = preFloor.prohibition.floor === "ALL" ? "건물 전 층" : `${preFloor.prohibition.floorTitle || preFloor.prohibition.floor} 전체`;
+        alert(`해당 시간대는 [${selectedBuilding} ${floorLbl}] 전체 이용 금지 시간(${preFloor.prohibition.title || '정기 제한'})으로 예약할 수 없습니다.`);
+        closeReservationModal();
+        renderSlotsGrid();
+        return;
+    }
+
     // 고유 예약 번호 생성
     const resId = "CSU-" + Date.now().toString().slice(-6) + "-" + Math.floor(Math.random() * 900 + 100);
 
@@ -255,6 +274,12 @@ function submitReservation() {
             // 서버 트랜잭션 내 고정예약 충돌 검증
             const serverFixedConflict = checkFixedReservationConflict(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin);
             if (serverFixedConflict.hasConflict) {
+                return; // abort transaction
+            }
+
+            // 서버 트랜잭션 내 층 전체 정기 이용금지 충돌 검증
+            const serverFloorConflict = checkFloorProhibitionConflict(dateKey, selectedBuilding, selectedFloor.name, startMin, endMin);
+            if (serverFloorConflict.hasConflict) {
                 return; // abort transaction
             }
 

@@ -243,8 +243,13 @@ function renderSlotsGrid() {
             const fixedConflict = checkFixedReservationConflict(dateKey, selectedBuilding, selectedRoom.number, slot.startMinutes, slot.endMinutes);
             const fixedSlotInfo = fixedConflict.hasConflict ? fixedConflict.fixed : null;
 
+            // 층 전체 정기 이용금지(채플, 청소 등) 충돌 검사
+            const currentFloorName = (selectedFloor && selectedFloor.name) ? selectedFloor.name : "";
+            const floorConflict = checkFloorProhibitionConflict(dateKey, selectedBuilding, currentFloorName, slot.startMinutes, slot.endMinutes);
+            const floorSlotInfo = floorConflict.hasConflict ? floorConflict.prohibition : null;
+
             const isPastSlot = isToday && slot.endMinutes <= nowMins;
-            const isReserved = !!bookedRes || !!blockedSlotInfo || !!fixedSlotInfo || !openStatus.isOpen || isPastSlot;
+            const isReserved = !!bookedRes || !!blockedSlotInfo || !!fixedSlotInfo || !!floorSlotInfo || !openStatus.isOpen || isPastSlot;
             if (openStatus.isOpen && !isReserved) availableSlotCount++;
 
             let isSelected = false;
@@ -288,6 +293,13 @@ function renderSlotsGrid() {
                 subText = `🔒 시설 점검 (${escapeHtml(blockedSlotInfo.reason || '이용 제한')})`;
                 dotColor = "#f59e0b";
                 badgeStyle = "background:#fef3c7; color:#92400e; border:1px solid #fde68a;";
+            } else if (floorSlotInfo) {
+                badgeText = "🚫 이용 제한";
+                const dayNames = ["일","월","화","수","목","금","토"];
+                const targetFloorLabel = floorSlotInfo.floor === "ALL" ? "건물 전 층" : `${floorSlotInfo.floorTitle || floorSlotInfo.floor} 전체`;
+                subText = `🔒 ${escapeHtml(floorSlotInfo.title || '정기 이용 제한')} (매주 ${dayNames[floorSlotInfo.dayOfWeek]} · ${targetFloorLabel})`;
+                dotColor = "#dc2626";
+                badgeStyle = "background:#fee2e2; color:#991b1b; border:1px solid #fecaca;";
             } else if (fixedSlotInfo) {
                 badgeText = "📌 고정 예약";
                 const dayNames = ["일","월","화","수","목","금","토"];
@@ -345,6 +357,10 @@ function renderSlotsGrid() {
                 card.onclick = () => showToast(openStatus.message, "error");
             } else if (blockedSlotInfo) {
                 card.onclick = () => showToast(`해당 시간은 시설 점검 중입니다. (${escapeHtml(blockedSlotInfo.reason || '이용 제한')})`, "error");
+            } else if (floorSlotInfo) {
+                const dayNames = ["일","월","화","수","목","금","토"];
+                const targetFloorLabel = floorSlotInfo.floor === "ALL" ? "건물 전 층" : `${floorSlotInfo.floorTitle || floorSlotInfo.floor} 전체`;
+                card.onclick = () => showToast(`해당 시간은 [${selectedBuilding} ${targetFloorLabel}] 전체 이용 금지 시간대(${escapeHtml(floorSlotInfo.title || '정기 이용 제한')})로 매주 ${dayNames[floorSlotInfo.dayOfWeek]}요일에 지정되어 있습니다.`, "error");
             } else if (fixedSlotInfo) {
                 const dayNames = ["일","월","화","수","목","금","토"];
                 card.onclick = () => showToast(`해당 시간은 고정 예약(${escapeHtml(fixedSlotInfo.title || '레슨')}) 시간대로 매주 ${dayNames[fixedSlotInfo.dayOfWeek]}요일에 지정되어 있습니다.`, "error");

@@ -409,38 +409,85 @@
 
 
             <!-- =================================================================
-                 TAB 3-5: 고정예약 관리 (Fixed Reservations)
+                 TAB 3-5: 고정예약 및 정기 이용금지 관리 (Fixed & Floor Prohibitions)
             ================================================================= -->
             <section id="pane-fixed" class="tab-pane">
-                <div class="toolbar-card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                    <div>
-                        <h3 style="font-size:16px; font-weight:700; color:var(--primary-dark);">📌 고정예약 관리 (레슨 등 매주 반복 일정)</h3>
-                        <p style="font-size:12.5px; color:var(--gray-500); margin-top:2px;">
-                            매주 특정 요일·시간을 고정 예약으로 등록하면, 학생들은 해당 슬롯을 예약할 수 없습니다.<br>
-                            학기 시작 시 등록하고, 방학·학기말에는 일괄 비활성화하여 관리하세요.
-                        </p>
+                <!-- 서브 탭 전환 버튼 바 -->
+                <div style="display:flex; gap:8px; margin-bottom:16px; border-bottom:2px solid var(--gray-200); padding-bottom:10px;">
+                    <button id="subtab-btn-fixed-rooms" class="seg-btn active" onclick="switchFixedSubTab('rooms')" style="padding:8px 18px; font-size:13.5px; font-weight:700; border-radius:8px; cursor:pointer;">
+                        📌 연습실별 고정예약 (레슨)
+                    </button>
+                    <button id="subtab-btn-fixed-floors" class="seg-btn" onclick="switchFixedSubTab('floors')" style="padding:8px 18px; font-size:13.5px; font-weight:700; border-radius:8px; cursor:pointer;">
+                        🚫 층 전체 이용금지 (채플·정기점검)
+                    </button>
+                </div>
+
+                <!-- SUBVIEW 1: 개별 연습실 고정예약 -->
+                <div id="subview-fixed-rooms">
+                    <div class="toolbar-card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <h3 style="font-size:16px; font-weight:700; color:var(--primary-dark);">📌 연습실별 고정예약 (레슨 등 매주 반복 일정)</h3>
+                            <p style="font-size:12.5px; color:var(--gray-500); margin-top:2px;">
+                                특정 연습실의 요일·시간을 고정 예약으로 등록하면, 학생들은 해당 슬롯을 예약할 수 없습니다.<br>
+                                학기 시작 시 등록하고, 방학·학기말에는 일괄 비활성화하여 관리하세요.
+                            </p>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn-tb-search" onclick="openFixedReservationModal()" style="background:var(--primary);">+ 고정예약 등록</button>
+                            <button class="btn-tb-search" onclick="deactivateAllFixedReservations()" style="background:#f1f5f9; color:var(--gray-700);">📴 전체 비활성화</button>
+                        </div>
                     </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <button class="btn-tb-search" onclick="openFixedReservationModal()" style="background:var(--primary);">+ 고정예약 등록</button>
-                        <button class="btn-tb-search" onclick="deactivateAllFixedReservations()" style="background:#f1f5f9; color:var(--gray-700);">📴 전체 비활성화</button>
+
+                    <!-- 요일 필터 -->
+                    <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+                        <span style="font-size:13px; color:var(--gray-500); font-weight:600;">요일 필터:</span>
+                        <button class="seg-btn active" id="fixd-filter-all" onclick="setFixedDayFilter(-1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">전체</button>
+                        <button class="seg-btn" id="fixd-filter-1" onclick="setFixedDayFilter(1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">월</button>
+                        <button class="seg-btn" id="fixd-filter-2" onclick="setFixedDayFilter(2)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">화</button>
+                        <button class="seg-btn" id="fixd-filter-3" onclick="setFixedDayFilter(3)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">수</button>
+                        <button class="seg-btn" id="fixd-filter-4" onclick="setFixedDayFilter(4)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">목</button>
+                        <button class="seg-btn" id="fixd-filter-5" onclick="setFixedDayFilter(5)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">금</button>
+                        <button class="seg-btn" id="fixd-filter-6" onclick="setFixedDayFilter(6)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">토</button>
+                    </div>
+
+                    <!-- 고정예약 목록 (동적 렌더링) -->
+                    <div id="fixed-reservations-grid" style="display:flex; flex-direction:column; gap:10px;">
+                        <!-- Dynamic Render -->
                     </div>
                 </div>
 
-                <!-- 필터 -->
-                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
-                    <span style="font-size:13px; color:var(--gray-500); font-weight:600;">요일 필터:</span>
-                    <button class="seg-btn active" id="fixd-filter-all" onclick="setFixedDayFilter(-1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">전체</button>
-                    <button class="seg-btn" id="fixd-filter-1" onclick="setFixedDayFilter(1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">월</button>
-                    <button class="seg-btn" id="fixd-filter-2" onclick="setFixedDayFilter(2)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">화</button>
-                    <button class="seg-btn" id="fixd-filter-3" onclick="setFixedDayFilter(3)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">수</button>
-                    <button class="seg-btn" id="fixd-filter-4" onclick="setFixedDayFilter(4)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">목</button>
-                    <button class="seg-btn" id="fixd-filter-5" onclick="setFixedDayFilter(5)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">금</button>
-                    <button class="seg-btn" id="fixd-filter-6" onclick="setFixedDayFilter(6)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">토</button>
-                </div>
+                <!-- SUBVIEW 2: 건물 층 전체 이용금지 (채플, 청소, 시설보수 등) -->
+                <div id="subview-fixed-floors" style="display:none;">
+                    <div class="toolbar-card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <h3 style="font-size:16px; font-weight:700; color:#dc2626;">🚫 건물 층 전체 이용금지 시간 (채플·정기점검)</h3>
+                            <p style="font-size:12.5px; color:var(--gray-500); margin-top:2px;">
+                                특정 건물 및 층(또는 전 층) 전체를 지정한 요일·시간대에 일괄 예약 금지합니다.<br>
+                                예: 매주 화/목 11:00~12:00 채플 시간 신관 전 층 차단, 정기 청소 시간 층 차단 등
+                            </p>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn-tb-search" onclick="openFloorProhibitionModal()" style="background:#dc2626; color:#fff;">+ 층 이용금지 등록</button>
+                            <button class="btn-tb-search" onclick="deactivateAllFloorProhibitions()" style="background:#f1f5f9; color:var(--gray-700);">📴 전체 비활성화</button>
+                        </div>
+                    </div>
 
-                <!-- 고정예약 목록 (동적 렌더링) -->
-                <div id="fixed-reservations-grid" style="display:flex; flex-direction:column; gap:10px;">
-                    <!-- Dynamic Render -->
+                    <!-- 층 이용금지 요일 필터 -->
+                    <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+                        <span style="font-size:13px; color:var(--gray-500); font-weight:600;">요일 필터:</span>
+                        <button class="seg-btn active" id="floor-filter-all" onclick="setFloorDayFilter(-1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">전체</button>
+                        <button class="seg-btn" id="floor-filter-1" onclick="setFloorDayFilter(1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">월</button>
+                        <button class="seg-btn" id="floor-filter-2" onclick="setFloorDayFilter(2)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">화</button>
+                        <button class="seg-btn" id="floor-filter-3" onclick="setFloorDayFilter(3)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">수</button>
+                        <button class="seg-btn" id="floor-filter-4" onclick="setFloorDayFilter(4)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">목</button>
+                        <button class="seg-btn" id="floor-filter-5" onclick="setFloorDayFilter(5)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">금</button>
+                        <button class="seg-btn" id="floor-filter-6" onclick="setFloorDayFilter(6)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">토</button>
+                    </div>
+
+                    <!-- 층 이용금지 목록 (동적 렌더링) -->
+                    <div id="floor-prohibitions-grid" style="display:flex; flex-direction:column; gap:10px;">
+                        <!-- Dynamic Render -->
+                    </div>
                 </div>
             </section>
 
@@ -899,6 +946,101 @@
     </div>
 
     <!-- =================================================================
+         MODAL-FLOOR: 층 전체 정기 이용금지 등록 모달
+    ================================================================= -->
+    <div id="modal-floor-prohibition" class="admin-modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeFloorProhibitionModal()"></div>
+        <div class="admin-modal-dialog">
+            <div class="admin-modal-header">
+                <h3>🚫 층 전체 정기 이용금지 등록</h3>
+                <button class="btn-modal-close" onclick="closeFloorProhibitionModal()">✕</button>
+            </div>
+            <form onsubmit="event.preventDefault(); submitFloorProhibition();">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="floor-form-mode" value="add">
+                    <input type="hidden" id="floor-form-id" value="">
+
+                    <!-- 건물 선택 -->
+                    <div class="form-field">
+                        <label>건물</label>
+                        <select id="floor-building" class="policy-input" style="width:100%;" onchange="updateFloorTargetOptions()">
+                            <option value="신관">신관</option>
+                            <option value="종합관">종합관</option>
+                        </select>
+                    </div>
+
+                    <!-- 대상 층 선택 -->
+                    <div class="form-field">
+                        <label>차단 대상 층 <span style="font-size:11px; color:var(--gray-500); font-weight:400;">(선택한 층 내의 모든 연습실이 일괄 차단됩니다)</span></label>
+                        <select id="floor-target" class="policy-input" style="width:100%;">
+                            <!-- JS로 동적 옵션 채워짐 -->
+                        </select>
+                    </div>
+
+                    <!-- 요일 선택 (다중 선택 가능) -->
+                    <div class="form-field">
+                        <label>차단 요일 <span style="font-size:11px; color:var(--gray-500); font-weight:400;">(복수 선택 시 각 요일별로 일괄 등록됩니다)</span></label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="1" class="floor-day-cb"> 월요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="2" class="floor-day-cb"> 화요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="3" class="floor-day-cb"> 수요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="4" class="floor-day-cb"> 목요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="5" class="floor-day-cb"> 금요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="6" class="floor-day-cb"> 토요일
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 시작 / 종료 시간 -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                        <div class="form-field">
+                            <label>금지 시작 시간</label>
+                            <select id="floor-start-time" class="policy-input" style="width:100%;"></select>
+                        </div>
+                        <div class="form-field">
+                            <label>금지 종료 시간</label>
+                            <select id="floor-end-time" class="policy-input" style="width:100%;"></select>
+                        </div>
+                    </div>
+
+                    <!-- 금지 사유/제목 -->
+                    <div class="form-field">
+                        <label>금지 사유 / 명칭 <span style="font-size:11px; color:var(--gray-500); font-weight:400;">(학생 화면에 안내 표시)</span></label>
+                        <input type="text" id="floor-title" class="policy-input" style="width:100%;" placeholder="예: 화요 채플 시간, 정기 시설 소독, 학과 기도회" maxlength="40" required>
+                    </div>
+
+                    <!-- 활성 여부 -->
+                    <div class="form-field" style="display:flex; align-items:center; justify-content:space-between;">
+                        <div>
+                            <label style="margin-bottom:2px;">활성화 상태</label>
+                            <p style="font-size:12px; color:var(--gray-500); margin:0;">비활성화 시 학생 예약 차단이 일시 해제됩니다</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="floor-is-active" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeFloorProhibitionModal()">취소</button>
+                    <button type="submit" class="btn-primary" style="background:#dc2626;">등록하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================================================================
          MODAL 3: 특정 시간대 점검/차단 모달 (Block Room Slots Modal)
     ================================================================= -->
     <div id="modal-block-room" class="admin-modal" style="display:none;">
@@ -1116,9 +1258,9 @@
     <!-- Firebase Realtime Cloud Synchronization -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="firebase-sync.js?v=20261110_v1"></script>
+    <script src="firebase-sync.js?v=20261116_v6"></script>
 
-    <script src="admin.js?v=20261110_v1"></script>
+    <script src="admin.js?v=20261116_v6"></script>
 </body>
 
 </html>

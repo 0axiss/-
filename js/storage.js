@@ -232,6 +232,52 @@ function checkFixedReservationConflict(dateKey, building, roomNum, startMin, end
     return { hasConflict: false };
 }
 
+/**
+ * 층별 정기 이용금지 목록 조회
+ */
+function getFloorProhibitions() {
+    try {
+        const raw = localStorage.getItem(FLOOR_PROHIBITIONS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+/**
+ * 특정 날짜(요일) + 건물 + 층에 층별 정기 이용금지 충돌이 있는지 검사
+ * @param {string} dateKey - 날짜 문자열 (YYYY-MM-DD)
+ * @param {string} building - 건물명 ("신관", "종합관")
+ * @param {string} floor - 층 코드 ("B1", "5F", "6F", "2F")
+ * @param {number} startMin - 시작 분
+ * @param {number} endMin - 종료 분
+ * @returns {{ hasConflict: boolean, prohibition?: object }}
+ */
+function checkFloorProhibitionConflict(dateKey, building, floor, startMin, endMin) {
+    const list = getFloorProhibitions();
+    if (!list || list.length === 0) return { hasConflict: false };
+
+    const dateObj = new Date(dateKey + "T00:00:00");
+    const dayOfWeek = dateObj.getDay(); // 0=일, 1=월, ...
+
+    for (const fp of list) {
+        if (!fp.isActive) continue;
+        if (fp.building !== building) continue;
+        // 특정 층 또는 건물 전체 층("ALL") 매칭
+        if (fp.floor !== "ALL" && fp.floor !== floor) continue;
+        if (fp.dayOfWeek !== dayOfWeek) continue;
+
+        const fpStart = timeStrToMinutes(fp.startTime);
+        const fpEnd = timeStrToMinutes(fp.endTime);
+
+        if (startMin < fpEnd && endMin > fpStart) {
+            return { hasConflict: true, prohibition: fp };
+        }
+    }
+
+    return { hasConflict: false };
+}
+
 function generateSampleData() {
     const sampleList = [
         {

@@ -10,6 +10,7 @@ const SYNC_ROOM_SETTINGS_KEY = "CHONGSHIN_ROOM_SETTINGS";
 const SYNC_POLICIES_KEY = "CHONGSHIN_BOOKING_POLICIES";
 const SYNC_BOARD_KEY = "CHONGSHIN_MUSIC_BOARD_POSTS_V1";
 const SYNC_FIXED_RESERVATIONS_KEY = "CHONGSHIN_FIXED_RESERVATIONS";
+const SYNC_FLOOR_PROHIBITIONS_KEY = "CHONGSHIN_FLOOR_PROHIBITIONS";
 
 let remoteDb = null;
 let isRemoteSyncReady = false;
@@ -74,6 +75,15 @@ function pushFixedReservationsToCloud(list) {
     try {
         remoteDb.ref("fixedReservations").set(list || []).catch(e => {
             console.error("클라우드 고정예약 저장 실패:", e);
+        });
+    } catch (e) { }
+}
+
+function pushFloorProhibitionsToCloud(list) {
+    if (!remoteDb) return;
+    try {
+        remoteDb.ref("floorProhibitions").set(list || []).catch(e => {
+            console.error("클라우드 층 이용금지 저장 실패:", e);
         });
     } catch (e) { }
 }
@@ -227,6 +237,33 @@ if (remoteDb) {
                     const parsed = JSON.parse(local);
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         remoteDb.ref("fixedReservations").set(parsed);
+                    }
+                } catch (e) { }
+            }
+        }
+    });
+
+    // F. 층별 정기 이용금지 실시간 동기화
+    remoteDb.ref("floorProhibitions").on("value", snapshot => {
+        const val = snapshot.val();
+        if (val !== null && val !== undefined) {
+            const list = Array.isArray(val) ? val : Object.values(val);
+            localStorage.setItem(SYNC_FLOOR_PROHIBITIONS_KEY, JSON.stringify(list));
+
+            // 학생 타임테이블 화면 갱신
+            if (typeof currentScreen !== "undefined" && currentScreen === "time-screen" && typeof renderSlotsGrid === "function") {
+                renderSlotsGrid();
+            }
+
+            // 관리자 층 이용금지 탭/섹션 갱신
+            if (typeof renderFloorProhibitionsManager === "function") renderFloorProhibitionsManager();
+        } else {
+            const local = localStorage.getItem(SYNC_FLOOR_PROHIBITIONS_KEY);
+            if (local) {
+                try {
+                    const parsed = JSON.parse(local);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        remoteDb.ref("floorProhibitions").set(parsed);
                     }
                 } catch (e) { }
             }

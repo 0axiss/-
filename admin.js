@@ -561,7 +561,10 @@ function switchAdminTab(tabName) {
     if (tabName === "dashboard") renderDashboard();
     else if (tabName === "reservations") renderReservationsTable();
     else if (tabName === "rooms") renderRoomsManager();
-    else if (tabName === "fixed") renderFixedReservationsManager();
+    else if (tabName === "fixed") {
+        renderFixedReservationsManager();
+        renderFloorProhibitionsManager();
+    }
     else if (tabName === "policies") renderPoliciesForm();
     else if (tabName === "audit") renderAuditLogsList();
     else if (tabName === "board") renderAdminBoardPanels();
@@ -2222,3 +2225,293 @@ function deactivateAllFixedReservations() {
     renderFixedReservationsManager();
     showAdminToast(`전체 고정예약 ${list.length}건이 비활성화되었습니다.`, "success");
 }
+
+// =================================================================
+// 층 전체 정기 이용금지 관리 (Floor Prohibitions - 채플, 청소, 시설보수 등)
+// =================================================================
+const FLOOR_PROHIBITIONS_KEY = "CHONGSHIN_FLOOR_PROHIBITIONS";
+let floorDayFilter = -1; // -1=전체, 1~6=월~토
+
+/**
+ * 고정예약 탭 내 서브 탭 전환 (연습실별 vs 층 전체)
+ */
+function switchFixedSubTab(sub) {
+    const isRooms = sub === "rooms";
+    const btnRooms = document.getElementById("subtab-btn-fixed-rooms");
+    const btnFloors = document.getElementById("subtab-btn-fixed-floors");
+    const viewRooms = document.getElementById("subview-fixed-rooms");
+    const viewFloors = document.getElementById("subview-fixed-floors");
+
+    if (btnRooms) btnRooms.classList.toggle("active", isRooms);
+    if (btnFloors) btnFloors.classList.toggle("active", !isRooms);
+    if (viewRooms) viewRooms.style.display = isRooms ? "block" : "none";
+    if (viewFloors) viewFloors.style.display = !isRooms ? "block" : "none";
+
+    if (!isRooms) {
+        renderFloorProhibitionsManager();
+    } else {
+        renderFixedReservationsManager();
+    }
+}
+
+function getFloorProhibitions() {
+    try {
+        const raw = localStorage.getItem(FLOOR_PROHIBITIONS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+}
+
+function saveFloorProhibitions(list) {
+    if (!checkAdminAuth()) return false;
+    localStorage.setItem(FLOOR_PROHIBITIONS_KEY, JSON.stringify(list));
+    if (typeof pushFloorProhibitionsToCloud === "function") {
+        pushFloorProhibitionsToCloud(list);
+    }
+    return true;
+}
+
+function setFloorDayFilter(day) {
+    floorDayFilter = day;
+    const ids = ["floor-filter-all","floor-filter-1","floor-filter-2","floor-filter-3","floor-filter-4","floor-filter-5","floor-filter-6"];
+    ids.forEach((id, i) => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.toggle("active", (i === 0 ? day === -1 : day === i));
+    });
+    renderFloorProhibitionsManager();
+}
+
+function renderFloorProhibitionsManager() {
+    const grid = document.getElementById("floor-prohibitions-grid");
+    if (!grid) return;
+
+    const all = getFloorProhibitions();
+    const dayNames = ["일","월","화","수","목","금","토"];
+    const dayColors = ["","#3b82f6","#10b981","#f59e0b","#8b5cf6","#ef4444","#ec4899"];
+
+    const filtered = floorDayFilter === -1 ? all : all.filter(f => f.dayOfWeek === floorDayFilter);
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div style="text-align:center; padding:60px 20px; color:var(--gray-400);">
+                <div style="font-size:36px; margin-bottom:12px;">🚫</div>
+                <div style="font-size:14px; font-weight:600;">등록된 층 전체 이용금지 일정이 없습니다</div>
+                <div style="font-size:12px; margin-top:4px;">상단 '층 이용금지 등록' 버튼을 눌러 채플, 청소 등 정기 차단 시간을 등록하세요.</div>
+            </div>
+        `;
+        return;
+    }
+
+    // 요일 순, 시간 순 정렬
+    const sorted = [...filtered].sort((a, b) => {
+        if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
+        return timeStrToMinutes(a.startTime) - timeStrToMinutes(b.startTime);
+    });
+
+    grid.innerHTML = sorted.map(item => {
+        const dayColor = dayColors[item.dayOfWeek] || "var(--gray-600)";
+        const floorLabel = item.floor === "ALL" ? "건물 전 층 (모든 층 전체)" : `${item.floorTitle || item.floor} 전체`;
+        const opacityStyle = item.isActive ? "" : "opacity:0.55; filter:grayscale(0.6);";
+
+        return `
+            <div class="fixed-res-card" style="background:#fff; border:1px solid var(--border-color); border-radius:12px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; box-shadow:0 1px 3px rgba(0,0,0,0.04); ${opacityStyle}">
+                <div style="display:flex; align-items:center; gap:14px; flex:1; min-width:240px;">
+                    <!-- 요일 뱃지 -->
+                    <span style="background:${dayColor}18; color:${dayColor}; border:1px solid ${dayColor}40; padding:6px 12px; border-radius:8px; font-size:13px; font-weight:800; white-space:nowrap;">
+                        매주 ${dayNames[item.dayOfWeek]}요일
+                    </span>
+
+                    <!-- 정보 -->
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+                            <span style="font-size:14px; font-weight:700; color:var(--gray-900);">
+                                [${escapeHtml(item.building)}] ${escapeHtml(floorLabel)}
+                            </span>
+                            ${!item.isActive ? `<span style="font-size:11px; background:#f1f5f9; color:#64748b; padding:2px 6px; border-radius:4px; font-weight:600;">비활성</span>` : `<span style="font-size:11px; background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-weight:600;">차단 적용중</span>`}
+                        </div>
+                        <div style="font-size:12.5px; color:var(--gray-600);">
+                            <span style="font-weight:600; color:#dc2626;">⏰ ${item.startTime} ~ ${item.endTime}</span>
+                            <span style="margin:0 6px; color:var(--gray-300);">|</span>
+                            <span>📋 사유: <strong>${escapeHtml(item.title || '정기 이용 제한')}</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <label class="toggle-switch" title="차단 활성화/비활성화">
+                        <input type="checkbox" ${item.isActive ? 'checked' : ''} onchange="toggleFloorProhibition('${item.id}', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <button class="btn-tb-search" onclick="deleteFloorProhibition('${item.id}')" style="background:#fee2e2; color:#dc2626; padding:6px 10px; font-size:12px; border-radius:6px;" title="삭제">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateFloorTargetOptions() {
+    const buildingSelect = document.getElementById("floor-building");
+    const targetSelect = document.getElementById("floor-target");
+    if (!buildingSelect || !targetSelect) return;
+
+    const b = buildingSelect.value;
+    if (b === "신관") {
+        targetSelect.innerHTML = `
+            <option value="ALL">신관 건물 전 층 (B1, 5F, 6F 모든 층 전체 차단)</option>
+            <option value="B1">지하 1층 전체 (B06~B18호, 13개실)</option>
+            <option value="5F">5층 전체 (507~510호, 4개실)</option>
+            <option value="6F">6층 전체 (611~626호, 16개실)</option>
+        `;
+    } else {
+        targetSelect.innerHTML = `
+            <option value="ALL">종합관 건물 전 층 (모든 층 전체 차단)</option>
+            <option value="2F">2층 전체 (1호~12호, 12개실)</option>
+        `;
+    }
+}
+
+function openFloorProhibitionModal() {
+    if (!checkAdminAuth()) return;
+
+    // 시작/종료 시간 채우기
+    const sSelect = document.getElementById("floor-start-time");
+    const eSelect = document.getElementById("floor-end-time");
+
+    if (sSelect && eSelect) {
+        const timeOpts = [
+            "09:00","09:30","10:00","10:30","11:00","11:30","11:40","12:00",
+            "12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00",
+            "16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00",
+            "20:30","21:00","21:30","22:00"
+        ];
+        sSelect.innerHTML = timeOpts.slice(0, -1).map(t => `<option value="${t}">${t}</option>`).join('');
+        eSelect.innerHTML = timeOpts.slice(1).map(t => `<option value="${t}">${t}</option>`).join('');
+
+        sSelect.value = "11:00";
+        eSelect.value = "12:00";
+    }
+
+    updateFloorTargetOptions();
+
+    // 요일 체크박스 초기화
+    document.querySelectorAll(".floor-day-cb").forEach(cb => cb.checked = false);
+    // 화요일/목요일 기본 체크 (예: 채플 시간)
+    const tueCb = document.querySelector(".floor-day-cb[value='2']");
+    if (tueCb) tueCb.checked = true;
+
+    const titleInput = document.getElementById("floor-title");
+    if (titleInput) titleInput.value = "화요 채플 시간";
+
+    const activeCb = document.getElementById("floor-is-active");
+    if (activeCb) activeCb.checked = true;
+
+    const modal = document.getElementById("modal-floor-prohibition");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeFloorProhibitionModal() {
+    const modal = document.getElementById("modal-floor-prohibition");
+    if (modal) modal.style.display = "none";
+}
+
+function submitFloorProhibition() {
+    if (!checkAdminAuth()) return;
+
+    const building = document.getElementById("floor-building").value;
+    const targetSelect = document.getElementById("floor-target");
+    const floor = targetSelect.value;
+    const floorTitle = targetSelect.options[targetSelect.selectedIndex].text;
+
+    const startTime = document.getElementById("floor-start-time").value;
+    const endTime = document.getElementById("floor-end-time").value;
+    const title = document.getElementById("floor-title").value.trim();
+    const isActive = document.getElementById("floor-is-active").checked;
+
+    if (!title) {
+        showAdminToast("금지 사유(명칭)를 입력해주세요.", "error");
+        return;
+    }
+
+    const sMin = timeStrToMinutes(startTime);
+    const eMin = timeStrToMinutes(endTime);
+    if (sMin >= eMin) {
+        showAdminToast("종료 시간은 시작 시간보다 뒤여야 합니다.", "error");
+        return;
+    }
+
+    // 선택된 요일 확인
+    const selectedDays = [];
+    document.querySelectorAll(".floor-day-cb:checked").forEach(cb => {
+        selectedDays.push(parseInt(cb.value, 10));
+    });
+
+    if (selectedDays.length === 0) {
+        showAdminToast("차단할 요일을 하나 이상 선택해주세요.", "error");
+        return;
+    }
+
+    const list = getFloorProhibitions();
+    const nowStr = new Date().toISOString();
+
+    selectedDays.forEach(dayOfWeek => {
+        const newItem = {
+            id: `FP-${Date.now()}-${dayOfWeek}`,
+            building: building,
+            floor: floor,
+            floorTitle: floorTitle,
+            dayOfWeek: dayOfWeek,
+            startTime: startTime,
+            endTime: endTime,
+            title: title,
+            isActive: isActive,
+            createdAt: nowStr
+        };
+        list.push(newItem);
+    });
+
+    saveFloorProhibitions(list);
+    addAuditLog("FLOOR_PROHIBITION_CREATE", `${building} ${floorTitle}`, `${title} (${startTime}~${endTime})`, `요일: ${selectedDays.join(',')}`);
+    closeFloorProhibitionModal();
+    renderFloorProhibitionsManager();
+    showAdminToast(`층 전체 이용금지 ${selectedDays.length}건이 등록되었습니다.`, "success");
+}
+
+function toggleFloorProhibition(id, isActive) {
+    const list = getFloorProhibitions();
+    const item = list.find(f => f.id === id);
+    if (!item) return;
+    item.isActive = isActive;
+    saveFloorProhibitions(list);
+    addAuditLog("FLOOR_PROHIBITION_TOGGLE", `${item.building} ${item.floorTitle || item.floor}`, item.title, isActive ? "활성화" : "비활성화");
+    renderFloorProhibitionsManager();
+    showAdminToast(`층 이용금지가 ${isActive ? '활성화' : '비활성화'}되었습니다.`, "success");
+}
+
+function deleteFloorProhibition(id) {
+    const list = getFloorProhibitions();
+    const item = list.find(f => f.id === id);
+    if (!item) return;
+    if (!confirm(`[${item.building} ${item.floorTitle || item.floor}] ${item.title} 이용금지 일정을 삭제하시겠습니까?`)) return;
+    const newList = list.filter(f => f.id !== id);
+    saveFloorProhibitions(newList);
+    addAuditLog("FLOOR_PROHIBITION_DELETE", `${item.building} ${item.floorTitle || item.floor}`, item.title);
+    renderFloorProhibitionsManager();
+    showAdminToast("층 이용금지 일정이 삭제되었습니다.", "success");
+}
+
+function deactivateAllFloorProhibitions() {
+    const list = getFloorProhibitions();
+    if (list.length === 0) {
+        showAdminToast("등록된 층 이용금지 일정이 없습니다.", "error");
+        return;
+    }
+    if (!confirm(`전체 층 이용금지 ${list.length}건을 모두 비활성화하시겠습니까?\n(방학·학기말 임시 해제 시 사용. 삭제가 아닌 비활성화입니다.)`)) return;
+    list.forEach(f => f.isActive = false);
+    saveFloorProhibitions(list);
+    addAuditLog("FLOOR_PROHIBITION_DEACTIVATE_ALL", "전체", "학기말 일괄 비활성화");
+    renderFloorProhibitionsManager();
+    showAdminToast(`전체 층 이용금지 ${list.length}건이 비활성화되었습니다.`, "success");
+}
+

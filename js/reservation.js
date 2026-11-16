@@ -252,6 +252,12 @@ function submitReservation() {
                 return; // abort transaction
             }
 
+            // 서버 트랜잭션 내 고정예약 충돌 검증
+            const serverFixedConflict = checkFixedReservationConflict(dateKey, selectedBuilding, selectedRoom.number, startMin, endMin);
+            if (serverFixedConflict.hasConflict) {
+                return; // abort transaction
+            }
+
             list.push(newReservation);
             return list;
 

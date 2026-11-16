@@ -134,6 +134,18 @@
                 <span>연습실 및 점검 관리</span>
                 <span class="tab-count" id="badge-total-rooms">45</span>
             </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('fixed')">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                    <line x1="12" y1="14" x2="12" y2="18"></line>
+                    <line x1="10" y1="16" x2="14" y2="16"></line>
+                </svg>
+                <span>고정예약 관리</span>
+                <span class="tab-count" id="badge-total-fixed">0</span>
+            </button>
             <button class="admin-tab-btn" onclick="switchAdminTab('policies')">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -391,6 +403,43 @@
 
                 <!-- Rooms Grid Cards -->
                 <div class="rooms-manage-grid" id="rooms-manage-grid">
+                    <!-- Dynamic Render -->
+                </div>
+            </section>
+
+
+            <!-- =================================================================
+                 TAB 3-5: 고정예약 관리 (Fixed Reservations)
+            ================================================================= -->
+            <section id="pane-fixed" class="tab-pane">
+                <div class="toolbar-card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <h3 style="font-size:16px; font-weight:700; color:var(--primary-dark);">📌 고정예약 관리 (레슨 등 매주 반복 일정)</h3>
+                        <p style="font-size:12.5px; color:var(--gray-500); margin-top:2px;">
+                            매주 특정 요일·시간을 고정 예약으로 등록하면, 학생들은 해당 슬롯을 예약할 수 없습니다.<br>
+                            학기 시작 시 등록하고, 방학·학기말에는 일괄 비활성화하여 관리하세요.
+                        </p>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn-tb-search" onclick="openFixedReservationModal()" style="background:var(--primary);">+ 고정예약 등록</button>
+                        <button class="btn-tb-search" onclick="deactivateAllFixedReservations()" style="background:#f1f5f9; color:var(--gray-700);">📴 전체 비활성화</button>
+                    </div>
+                </div>
+
+                <!-- 필터 -->
+                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+                    <span style="font-size:13px; color:var(--gray-500); font-weight:600;">요일 필터:</span>
+                    <button class="seg-btn active" id="fixd-filter-all" onclick="setFixedDayFilter(-1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">전체</button>
+                    <button class="seg-btn" id="fixd-filter-1" onclick="setFixedDayFilter(1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">월</button>
+                    <button class="seg-btn" id="fixd-filter-2" onclick="setFixedDayFilter(2)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">화</button>
+                    <button class="seg-btn" id="fixd-filter-3" onclick="setFixedDayFilter(3)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">수</button>
+                    <button class="seg-btn" id="fixd-filter-4" onclick="setFixedDayFilter(4)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">목</button>
+                    <button class="seg-btn" id="fixd-filter-5" onclick="setFixedDayFilter(5)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">금</button>
+                    <button class="seg-btn" id="fixd-filter-6" onclick="setFixedDayFilter(6)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">토</button>
+                </div>
+
+                <!-- 고정예약 목록 (동적 렌더링) -->
+                <div id="fixed-reservations-grid" style="display:flex; flex-direction:column; gap:10px;">
                     <!-- Dynamic Render -->
                 </div>
             </section>
@@ -753,6 +802,101 @@
         </div>
     </div>
 
+
+    <!-- =================================================================
+         MODAL-FIXED: 고정예약 등록 모달
+    ================================================================= -->
+    <div id="modal-fixed-reservation" class="admin-modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeFixedReservationModal()"></div>
+        <div class="admin-modal-dialog">
+            <div class="admin-modal-header">
+                <h3>📌 고정예약 등록</h3>
+                <button class="btn-modal-close" onclick="closeFixedReservationModal()">✕</button>
+            </div>
+            <form onsubmit="event.preventDefault(); submitFixedReservation();">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="fixed-form-mode" value="add">
+                    <input type="hidden" id="fixed-form-id" value="">
+
+                    <!-- 건물 선택 -->
+                    <div class="form-field">
+                        <label>건물</label>
+                        <select id="fixed-building" class="policy-input" style="width:100%;" onchange="updateFixedRoomOptions()">
+                            <option value="신관">신관</option>
+                            <option value="종합관">종합관</option>
+                        </select>
+                    </div>
+
+                    <!-- 연습실 선택 -->
+                    <div class="form-field">
+                        <label>연습실</label>
+                        <select id="fixed-room" class="policy-input" style="width:100%;">
+                            <!-- JS로 채워짐 -->
+                        </select>
+                    </div>
+
+                    <!-- 요일 선택 (다중 선택 가능) -->
+                    <div class="form-field">
+                        <label>고정 요일 <span style="font-size:11px; color:var(--gray-500); font-weight:400;">(복수 선택 가능 — 각각 별도 항목으로 등록됩니다)</span></label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="1" class="fixed-day-cb"> 월요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="2" class="fixed-day-cb"> 화요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="3" class="fixed-day-cb"> 수요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="4" class="fixed-day-cb"> 목요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="5" class="fixed-day-cb"> 금요일
+                            </label>
+                            <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px;">
+                                <input type="checkbox" value="6" class="fixed-day-cb"> 토요일
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 시작 / 종료 시간 -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                        <div class="form-field">
+                            <label>시작 시간</label>
+                            <select id="fixed-start-time" class="policy-input" style="width:100%;"></select>
+                        </div>
+                        <div class="form-field">
+                            <label>종료 시간</label>
+                            <select id="fixed-end-time" class="policy-input" style="width:100%;"></select>
+                        </div>
+                    </div>
+
+                    <!-- 고정예약 사유/제목 -->
+                    <div class="form-field">
+                        <label>고정예약 사유 / 제목</label>
+                        <input type="text" id="fixed-title" class="policy-input" style="width:100%;" placeholder="예: 이OO 교수 레슨, 앙상블 수업" maxlength="40">
+                    </div>
+
+                    <!-- 활성 여부 -->
+                    <div class="form-field" style="display:flex; align-items:center; justify-content:space-between;">
+                        <div>
+                            <label style="margin-bottom:2px;">활성화 상태</label>
+                            <p style="font-size:12px; color:var(--gray-500); margin:0;">비활성화 시 학생 화면에 영향 없음 (방학·학기말 임시 해제)</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="fixed-is-active" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeFixedReservationModal()">취소</button>
+                    <button type="submit" class="btn-primary">등록하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- =================================================================
          MODAL 3: 특정 시간대 점검/차단 모달 (Block Room Slots Modal)

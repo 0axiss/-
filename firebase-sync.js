@@ -9,6 +9,7 @@ const SYNC_STORAGE_KEY = "CHONGSHIN_MUSIC_RESERVATIONS_V2";
 const SYNC_ROOM_SETTINGS_KEY = "CHONGSHIN_ROOM_SETTINGS";
 const SYNC_POLICIES_KEY = "CHONGSHIN_BOOKING_POLICIES";
 const SYNC_BOARD_KEY = "CHONGSHIN_MUSIC_BOARD_POSTS_V1";
+const SYNC_FIXED_RESERVATIONS_KEY = "CHONGSHIN_FIXED_RESERVATIONS";
 
 let remoteDb = null;
 let isRemoteSyncReady = false;
@@ -64,6 +65,15 @@ function pushRoomSettingsToCloud(settings) {
     try {
         remoteDb.ref("roomSettings").set(settings || {}).catch(e => {
             console.error("클라우드 연습실 설정 저장 실패:", e);
+        });
+    } catch (e) { }
+}
+
+function pushFixedReservationsToCloud(list) {
+    if (!remoteDb) return;
+    try {
+        remoteDb.ref("fixedReservations").set(list || []).catch(e => {
+            console.error("클라우드 고정예약 저장 실패:", e);
         });
     } catch (e) { }
 }
@@ -191,6 +201,33 @@ if (remoteDb) {
             if (local) {
                 try {
                     remoteDb.ref("roomSettings").set(JSON.parse(local));
+                } catch (e) { }
+            }
+        }
+    });
+
+    // E. 고정예약 실시간 동기화
+    remoteDb.ref("fixedReservations").on("value", snapshot => {
+        const val = snapshot.val();
+        if (val !== null && val !== undefined) {
+            const list = Array.isArray(val) ? val : Object.values(val);
+            localStorage.setItem(SYNC_FIXED_RESERVATIONS_KEY, JSON.stringify(list));
+
+            // 학생 타임테이블 화면 갱신
+            if (typeof currentScreen !== "undefined" && currentScreen === "time-screen" && typeof renderSlotsGrid === "function") {
+                renderSlotsGrid();
+            }
+
+            // 관리자 고정예약 탭 갱신
+            if (typeof renderFixedReservationsManager === "function") renderFixedReservationsManager();
+        } else {
+            const local = localStorage.getItem(SYNC_FIXED_RESERVATIONS_KEY);
+            if (local) {
+                try {
+                    const parsed = JSON.parse(local);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        remoteDb.ref("fixedReservations").set(parsed);
+                    }
                 } catch (e) { }
             }
         }

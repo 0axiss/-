@@ -545,7 +545,7 @@ function switchAdminTab(tabName) {
 
     // 탭 버튼 스타일 갱신
     document.querySelectorAll(".admin-tab-btn").forEach((btn, idx) => {
-        const names = ["dashboard", "reservations", "rooms", "policies", "audit", "board"];
+        const names = ["dashboard", "reservations", "rooms", "fixed", "policies", "audit", "board"];
         if (names[idx] === tabName) btn.classList.add("active");
         else btn.classList.remove("active");
     });
@@ -561,6 +561,7 @@ function switchAdminTab(tabName) {
     if (tabName === "dashboard") renderDashboard();
     else if (tabName === "reservations") renderReservationsTable();
     else if (tabName === "rooms") renderRoomsManager();
+    else if (tabName === "fixed") renderFixedReservationsManager();
     else if (tabName === "policies") renderPoliciesForm();
     else if (tabName === "audit") renderAuditLogsList();
     else if (tabName === "board") renderAdminBoardPanels();
@@ -585,6 +586,12 @@ function updateBadgesCount() {
 
     const logs = getAuditLogs();
     document.getElementById("badge-total-logs").textContent = logs.length;
+
+    const fixedBadge = document.getElementById("badge-total-fixed");
+    if (fixedBadge) {
+        const fixedList = getFixedReservations();
+        fixedBadge.textContent = fixedList.filter(f => f.isActive).length;
+    }
 }
 
 function renderDashboard() {
@@ -1971,3 +1978,247 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 3. 게시판 배지 갱신
     updateAdminBoardBadges();
 });
+
+// =================================================================
+// 고정예약 관리 (Fixed Reservations - 레슨 등 매주 반복 일정)
+// =================================================================
+
+const FIXED_RESERVATIONS_KEY = "CHONGSHIN_FIXED_RESERVATIONS";
+let fixedDayFilter = -1; // -1=전체, 1~6=월~토
+
+function getFixedReservations() {
+    try {
+        const raw = localStorage.getItem(FIXED_RESERVATIONS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+}
+
+function saveFixedReservations(list) {
+    if (!checkAdminAuth()) return false;
+    localStorage.setItem(FIXED_RESERVATIONS_KEY, JSON.stringify(list));
+    if (typeof pushFixedReservationsToCloud === "function") {
+        pushFixedReservationsToCloud(list);
+    }
+    return true;
+}
+
+function setFixedDayFilter(day) {
+    fixedDayFilter = day;
+    // 필터 버튼 스타일
+    const ids = ["fixd-filter-all","fixd-filter-1","fixd-filter-2","fixd-filter-3","fixd-filter-4","fixd-filter-5","fixd-filter-6"];
+    ids.forEach((id, i) => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.toggle("active", (i === 0 ? day === -1 : day === i));
+    });
+    renderFixedReservationsManager();
+}
+
+function renderFixedReservationsManager() {
+    const grid = document.getElementById("fixed-reservations-grid");
+    if (!grid) return;
+
+    const all = getFixedReservations();
+    const dayNames = ["일","월","화","수","목","금","토"];
+    const dayColors = ["","#3b82f6","#10b981","#f59e0b","#8b5cf6","#ef4444","#ec4899"];
+
+    // 뱃지 카운트 갱신
+    const badge = document.getElementById("badge-total-fixed");
+    if (badge) badge.textContent = all.filter(f => f.isActive).length;
+
+    const filtered = fixedDayFilter === -1 ? all : all.filter(f => f.dayOfWeek === fixedDayFilter);
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div style="text-align:center; padding:60px 20px; color:var(--gray-400);">
+                <div style="font-size:36px; margin-bottom:12px;">📌</div>
+                <div style="font-size:14px; font-weight:600;">등록된 고정예약이 없습니다</div>
+                <div style="font-size:12px; margin-top:4px;">상단 '고정예약 등록' 버튼을 눌러 레슨 등 반복 일정을 등록하세요.</div>
+            </div>
+        `;
+        return;
+    }
+
+    // 요일→시간 순으로 정렬
+    const sorted = [...filtered].sort((a, b) => {
+        if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
+        return (a.startTime || "").localeCompare(b.startTime || "");
+    });
+
+    grid.innerHTML = sorted.map(fr => {
+        const dayName = dayNames[fr.dayOfWeek] || "?";
+        const dayColor = dayColors[fr.dayOfWeek] || "#64748b";
+        const activeBadge = fr.isActive
+            ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700;">● 활성</span>`
+            : `<span style="background:#f1f5f9; color:#94a3b8; border:1px solid #e2e8f0; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700;">○ 비활성</span>`;
+        return `
+            <div style="background:var(--surface); border:1.5px solid ${fr.isActive ? 'var(--gray-200)' : 'var(--gray-100)'}; border-radius:12px; padding:16px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; opacity:${fr.isActive ? 1 : 0.6};">
+                <div style="width:48px; height:48px; border-radius:12px; background:${dayColor}18; border:1.5px solid ${dayColor}44; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <span style="font-size:18px; font-weight:800; color:${dayColor};">${dayName}</span>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <div style="font-size:14px; font-weight:700; color:var(--gray-900); margin-bottom:3px;">${escapeHtml(fr.title || '고정예약')}</div>
+                    <div style="font-size:12.5px; color:var(--gray-500);">
+                        📍 ${escapeHtml(fr.building)} ${escapeHtml(fr.room)}호 &nbsp;·&nbsp;
+                        🕐 ${escapeHtml(fr.startTime)} ~ ${escapeHtml(fr.endTime)} &nbsp;·&nbsp;
+                        매주 ${dayName}요일
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                    ${activeBadge}
+                    <label class="toggle-switch" title="${fr.isActive ? '비활성화' : '활성화'}">
+                        <input type="checkbox" ${fr.isActive ? 'checked' : ''} onchange="toggleFixedReservation('${fr.id}', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <button class="btn-action cancel" onclick="deleteFixedReservation('${fr.id}')">삭제</button>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function openFixedReservationModal() {
+    document.getElementById("fixed-form-mode").value = "add";
+    document.getElementById("fixed-form-id").value = "";
+    document.getElementById("fixed-title").value = "";
+    document.getElementById("fixed-is-active").checked = true;
+
+    // 요일 체크박스 초기화
+    document.querySelectorAll(".fixed-day-cb").forEach(cb => cb.checked = false);
+
+    // 건물/연습실 셀렉트 채우기
+    updateFixedRoomOptions();
+
+    // 시간 셀렉트 채우기
+    const sSelect = document.getElementById("fixed-start-time");
+    const eSelect = document.getElementById("fixed-end-time");
+    sSelect.innerHTML = "";
+    eSelect.innerHTML = "";
+    TIME_SLOTS.forEach(s => {
+        const optS = document.createElement("option");
+        optS.value = s.startStr;
+        optS.textContent = s.startStr;
+        sSelect.appendChild(optS);
+        const optE = document.createElement("option");
+        optE.value = s.endStr;
+        optE.textContent = s.endStr;
+        eSelect.appendChild(optE);
+    });
+    sSelect.value = "09:00";
+    eSelect.value = "11:00";
+
+    document.getElementById("modal-fixed-reservation").style.display = "flex";
+}
+
+function updateFixedRoomOptions() {
+    const building = document.getElementById("fixed-building").value;
+    const roomSelect = document.getElementById("fixed-room");
+    roomSelect.innerHTML = "";
+    const b = BASE_BUILDINGS[building];
+    if (!b) return;
+    b.floors.forEach(floor => {
+        floor.rooms.forEach(room => {
+            const opt = document.createElement("option");
+            opt.value = room.number;
+            opt.textContent = `${room.number}호 (${floor.name} · ${room.type || '일반'})`;
+            roomSelect.appendChild(opt);
+        });
+    });
+}
+
+function closeFixedReservationModal() {
+    document.getElementById("modal-fixed-reservation").style.display = "none";
+}
+
+function submitFixedReservation() {
+    const building = document.getElementById("fixed-building").value;
+    const room = document.getElementById("fixed-room").value;
+    const startTime = document.getElementById("fixed-start-time").value;
+    const endTime = document.getElementById("fixed-end-time").value;
+    const title = document.getElementById("fixed-title").value.trim();
+    const isActive = document.getElementById("fixed-is-active").checked;
+
+    // 선택된 요일 수집
+    const selectedDays = [...document.querySelectorAll(".fixed-day-cb:checked")].map(cb => Number(cb.value));
+
+    if (selectedDays.length === 0) {
+        showAdminToast("요일을 하나 이상 선택해주세요.", "error");
+        return;
+    }
+    if (!title) {
+        showAdminToast("고정예약 사유/제목을 입력해주세요.", "error");
+        return;
+    }
+    const startMin = timeStrToMinutes(startTime);
+    const endMin = timeStrToMinutes(endTime);
+    if (startMin >= endMin) {
+        showAdminToast("종료 시간은 시작 시간보다 뒤여야 합니다.", "error");
+        return;
+    }
+
+    const session = checkAdminAuth();
+    const list = getFixedReservations();
+
+    // 선택된 각 요일마다 고정예약 항목 생성
+    selectedDays.forEach(day => {
+        const dayNames = ["일","월","화","수","목","금","토"];
+        const newItem = {
+            id: "FIX-" + Date.now().toString().slice(-7) + "-" + day,
+            building,
+            room,
+            dayOfWeek: day,
+            startTime,
+            endTime,
+            title,
+            isActive,
+            registeredBy: session ? `${session.name}` : "관리자",
+            createdAt: new Date().toISOString()
+        };
+        list.push(newItem);
+    });
+
+    saveFixedReservations(list);
+    addAuditLog("FIXED_RESERVATION_ADD", `${building} ${room}호`, title, `요일: ${selectedDays.map(d=>["일","월","화","수","목","금","토"][d]).join(",")} / ${startTime}~${endTime}`);
+
+    closeFixedReservationModal();
+    renderFixedReservationsManager();
+    updateBadgesCount();
+    showAdminToast(`고정예약 ${selectedDays.length}건이 등록되었습니다.`, "success");
+}
+
+function toggleFixedReservation(id, isActive) {
+    const list = getFixedReservations();
+    const item = list.find(f => f.id === id);
+    if (!item) return;
+    item.isActive = isActive;
+    saveFixedReservations(list);
+    addAuditLog("FIXED_RESERVATION_TOGGLE", `${item.building} ${item.room}호`, item.title, isActive ? "활성화" : "비활성화");
+    renderFixedReservationsManager();
+    showAdminToast(`고정예약이 ${isActive ? '활성화' : '비활성화'}되었습니다.`, "success");
+}
+
+function deleteFixedReservation(id) {
+    const list = getFixedReservations();
+    const item = list.find(f => f.id === id);
+    if (!item) return;
+    if (!confirm(`[${item.building} ${item.room}호] ${item.title} 고정예약을 삭제하시겠습니까?`)) return;
+    const newList = list.filter(f => f.id !== id);
+    saveFixedReservations(newList);
+    addAuditLog("FIXED_RESERVATION_DELETE", `${item.building} ${item.room}호`, item.title);
+    renderFixedReservationsManager();
+    updateBadgesCount();
+    showAdminToast("고정예약이 삭제되었습니다.", "success");
+}
+
+function deactivateAllFixedReservations() {
+    const list = getFixedReservations();
+    if (list.length === 0) {
+        showAdminToast("등록된 고정예약이 없습니다.", "error");
+        return;
+    }
+    if (!confirm(`전체 고정예약 ${list.length}건을 모두 비활성화하시겠습니까?\n(방학·학기말 임시 해제 시 사용. 삭제가 아닌 비활성화입니다.)`) ) return;
+    list.forEach(f => f.isActive = false);
+    saveFixedReservations(list);
+    addAuditLog("FIXED_RESERVATION_DEACTIVATE_ALL", "전체", "학기말 일괄 비활성화");
+    renderFixedReservationsManager();
+    showAdminToast(`전체 고정예약 ${list.length}건이 비활성화되었습니다.`, "success");
+}

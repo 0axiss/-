@@ -188,6 +188,50 @@ function checkRoomCooldownConflict(dateKey, building, roomNum, startMin, endMin,
     return { hasConflict: false };
 }
 
+/**
+ * 고정예약 목록 조회
+ */
+function getFixedReservations() {
+    try {
+        const raw = localStorage.getItem(FIXED_RESERVATIONS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+/**
+ * 특정 날짜(요일) + 연습실에 고정예약 충돌이 있는지 검사
+ * @param {string} dateKey - 날짜 문자열 (YYYY-MM-DD)
+ * @param {string} building - 건물명
+ * @param {string} roomNum - 연습실 호수
+ * @param {number} startMin - 시작 분
+ * @param {number} endMin - 종료 분
+ * @returns {{ hasConflict: boolean, fixed?: object }}
+ */
+function checkFixedReservationConflict(dateKey, building, roomNum, startMin, endMin) {
+    const list = getFixedReservations();
+    if (!list || list.length === 0) return { hasConflict: false };
+
+    const dateObj = new Date(dateKey + "T00:00:00");
+    const dayOfWeek = dateObj.getDay(); // 0=일, 1=월, ...
+
+    for (const fr of list) {
+        if (!fr.isActive) continue;
+        if (fr.building !== building || fr.room !== roomNum) continue;
+        if (fr.dayOfWeek !== dayOfWeek) continue;
+
+        const frStart = timeStrToMinutes(fr.startTime);
+        const frEnd = timeStrToMinutes(fr.endTime);
+
+        if (startMin < frEnd && endMin > frStart) {
+            return { hasConflict: true, fixed: fr };
+        }
+    }
+
+    return { hasConflict: false };
+}
+
 function generateSampleData() {
     const sampleList = [
         {

@@ -1190,32 +1190,280 @@ input:checked + .toggle-slider:before {
 .admin-toast.success { background: #065f46; border-left: 4px solid #10b981; }
 .admin-toast.error { background: #991b1b; border-left: 4px solid #ef4444; }
 
+/* 기본 데스크탑 분할 그리드 */
+.dashboard-split-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+}
+
 /* =================================================================
-   11. 모바일 반응형 최적화 (Mobile Responsive)
+   11. 모바일 및 태블릿 반응형 최적화 (Mobile Responsive)
 ================================================================= */
 @media (max-width: 768px) {
+    /* 1. 상단 글로벌 헤더 */
     .admin-header {
-        padding: 12px 16px;
+        padding: 10px 12px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
     }
 
+    .admin-brand {
+        gap: 8px;
+    }
+
+    .admin-brand-crest {
+        width: 32px;
+        height: 32px;
+    }
+
+    .admin-brand-text h1 {
+        font-size: 13.5px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .admin-brand-text span {
+        font-size: 8.5px;
+        letter-spacing: 0.02em;
+    }
+
+    .admin-user-nav {
+        gap: 6px;
+    }
+
+    .admin-badge {
+        display: none; /* 모바일 공간 확보 */
+    }
+
+    .btn-header-link {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .btn-logout {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    /* 2. 탭 네비게이션 바 (가로 터치 스크롤 최적화) */
+    .admin-tab-nav {
+        padding: 0 10px;
+        top: 52px;
+        gap: 4px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .admin-tab-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .admin-tab-btn {
+        padding: 12px 10px;
+        font-size: 12.5px;
+        flex-shrink: 0;
+        white-space: nowrap;
+        gap: 5px;
+    }
+
+    .admin-tab-btn svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .tab-count {
+        padding: 1px 5px;
+        font-size: 10px;
+    }
+
+    /* 3. 메인 컨텐츠 영역 */
     .admin-content {
-        padding: 18px 16px 40px;
+        padding: 14px 10px 60px;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+
+    /* 4. 카드 및 툴바 여백 */
+    .toolbar-card, .table-card, .policy-card {
+        padding: 14px 12px;
+        border-radius: var(--radius-md);
+        margin-bottom: 16px;
     }
 
     .toolbar-grid {
         grid-template-columns: 1fr;
+        gap: 10px;
     }
 
-    .admin-tab-nav {
-        padding: 0 16px;
+    /* 5. 대시보드 KPI 카드 (모바일 2열 정렬) */
+    .dashboard-kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
     }
 
-    .admin-tab-btn {
-        padding: 14px 12px;
-        font-size: 13px;
+    .kpi-card {
+        padding: 12px 10px;
+        border-radius: var(--radius-md);
+    }
+
+    .kpi-label {
+        font-size: 11px;
+        margin-bottom: 3px;
+    }
+
+    .kpi-value {
+        font-size: 20px;
+    }
+
+    .kpi-subtext {
+        font-size: 10px;
+        margin-top: 2px;
+    }
+
+    .kpi-icon-wrap {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    .dashboard-split-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    /* 6. 테이블 모바일 가로스크롤 최적화 */
+    .table-header-bar {
+        padding: 12px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .table-title-group h3 {
+        font-size: 14px;
+    }
+
+    .table-title-group span {
+        font-size: 11px;
+    }
+
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .admin-table th, .admin-table td {
+        padding: 9px 8px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .table-actions {
+        gap: 4px;
+    }
+
+    .btn-action {
+        padding: 4px 7px;
+        font-size: 11px;
+    }
+
+    /* 7. 고정예약 & 층 이용금지 모바일 카드 */
+    .fixed-res-card {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 12px 14px !important;
+    }
+
+    .fixed-res-card > div:first-child {
+        min-width: unset !important;
+    }
+
+    .fixed-res-card > div:last-child {
+        justify-content: flex-end;
+        border-top: 1px solid var(--gray-100);
+        padding-top: 8px;
+    }
+
+    /* 8. 모달 다이얼로그 (바텀시트 및 모바일 팝업 최적화) */
+    .admin-modal {
+        padding: 10px;
+        align-items: flex-end;
+    }
+
+    .admin-modal-dialog {
+        width: 100%;
+        max-width: 100%;
+        max-height: 88vh;
+        border-radius: 20px 20px 12px 12px;
+        margin: 0;
+    }
+
+    .admin-modal-header {
+        padding: 14px 16px;
+    }
+
+    .admin-modal-header h3 {
+        font-size: 15.5px;
+    }
+
+    .admin-modal-body {
+        padding: 16px;
+    }
+
+    .admin-modal-footer {
+        padding: 12px 16px;
+        gap: 8px;
+    }
+
+    .admin-modal-footer button {
+        flex: 1;
+        padding: 10px;
+        font-size: 13.5px;
+    }
+
+    /* 9. 로그인 게이트웨이 화면 */
+    .login-screen-wrapper {
+        padding: 16px;
+    }
+
+    .login-card {
+        padding: 26px 18px;
+        border-radius: var(--radius-lg);
+    }
+
+    .login-title {
+        font-size: 19px;
+    }
+
+    .policy-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    /* 초소형 스마트폰 화면 (375px 이하 최적화) */
+    .admin-brand-text h1 {
+        font-size: 12.5px;
+    }
+
+    .btn-header-link span, .btn-logout span {
+        display: none; /* 아이콘만 남겨 헤더 1줄 유지 */
+    }
+
+    .btn-header-link, .btn-logout {
+        padding: 6px 8px;
     }
 
     .dashboard-kpi-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr; /* 2열 유지 */
     }
 }

@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="admin.css?v=20261116_v9">
+    <link rel="stylesheet" href="admin.css?v=20261116_v10">
 </head>
 
 <body>
@@ -429,30 +429,37 @@
                             <h3 style="font-size:16px; font-weight:700; color:var(--primary-dark);">📌 연습실별 고정예약 (레슨 등 매주 반복 일정)</h3>
                             <p style="font-size:12.5px; color:var(--gray-500); margin-top:2px;">
                                 특정 연습실의 요일·시간을 고정 예약으로 등록하면, 학생들은 해당 슬롯을 예약할 수 없습니다.<br>
-                                학기 시작 시 등록하고, 방학·학기말에는 일괄 비활성화하여 관리하세요.
+                                학기 시작 시 등록하고, 방학·학기말에는 맨 아래 일괄 비활성화 버튼으로 관리하세요.
                             </p>
                         </div>
-                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <button class="btn-tb-search" onclick="openFixedReservationModal()" style="background:var(--primary);">+ 고정예약 등록</button>
-                            <button class="btn-tb-search" onclick="deactivateAllFixedReservations()" style="background:#f1f5f9; color:var(--gray-700);">📴 전체 비활성화</button>
+                        <div>
+                            <button class="btn-tb-search" onclick="openFixedReservationModal()" style="background:var(--primary); color:#ffffff; font-weight:700; padding:10px 18px; border-radius:8px;">+ 고정예약 등록</button>
                         </div>
                     </div>
 
-                    <!-- 요일 필터 -->
-                    <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
-                        <span style="font-size:13px; color:var(--gray-500); font-weight:600;">요일 필터:</span>
-                        <button class="seg-btn active" id="fixd-filter-all" onclick="setFixedDayFilter(-1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">전체</button>
-                        <button class="seg-btn" id="fixd-filter-1" onclick="setFixedDayFilter(1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">월</button>
-                        <button class="seg-btn" id="fixd-filter-2" onclick="setFixedDayFilter(2)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">화</button>
-                        <button class="seg-btn" id="fixd-filter-3" onclick="setFixedDayFilter(3)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">수</button>
-                        <button class="seg-btn" id="fixd-filter-4" onclick="setFixedDayFilter(4)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">목</button>
-                        <button class="seg-btn" id="fixd-filter-5" onclick="setFixedDayFilter(5)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">금</button>
-                        <button class="seg-btn" id="fixd-filter-6" onclick="setFixedDayFilter(6)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">토</button>
+                    <!-- 요일 필터 (스마트폰 7등분 균등 그리드) -->
+                    <div class="filter-day-bar">
+                        <button class="seg-btn active" id="fixd-filter-all" onclick="setFixedDayFilter(-1)">전체</button>
+                        <button class="seg-btn" id="fixd-filter-1" onclick="setFixedDayFilter(1)">월</button>
+                        <button class="seg-btn" id="fixd-filter-2" onclick="setFixedDayFilter(2)">화</button>
+                        <button class="seg-btn" id="fixd-filter-3" onclick="setFixedDayFilter(3)">수</button>
+                        <button class="seg-btn" id="fixd-filter-4" onclick="setFixedDayFilter(4)">목</button>
+                        <button class="seg-btn" id="fixd-filter-5" onclick="setFixedDayFilter(5)">금</button>
+                        <button class="seg-btn" id="fixd-filter-6" onclick="setFixedDayFilter(6)">토</button>
                     </div>
 
                     <!-- 고정예약 목록 (동적 렌더링) -->
                     <div id="fixed-reservations-grid" style="display:flex; flex-direction:column; gap:10px;">
                         <!-- Dynamic Render -->
+                    </div>
+
+                    <!-- 맨 밑 안전 비활성화 영역 -->
+                    <div style="margin-top:28px; padding:16px; background:#f8fafc; border:1px dashed var(--gray-300); border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <span style="font-size:13px; font-weight:700; color:var(--gray-800);">📴 학기말 / 방학 고정예약 일괄 해제</span>
+                            <p style="font-size:12px; color:var(--gray-500); margin-top:2px;">등록된 모든 연습실 고정예약을 한 번에 비활성화합니다. (내역은 보존됨)</p>
+                        </div>
+                        <button class="btn-tb-search" onclick="deactivateAllFixedReservations()" style="background:#f1f5f9; color:#dc2626; border:1px solid #fecaca; font-size:12.5px; font-weight:700; padding:8px 16px; border-radius:8px;">고정예약 전체 비활성화</button>
                     </div>
                 </div>
 
@@ -466,27 +473,34 @@
                                 예: 매주 화/목 11:00~12:00 채플 시간 신관 전 층 차단, 정기 청소 시간 층 차단 등
                             </p>
                         </div>
-                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <button class="btn-tb-search" onclick="openFloorProhibitionModal()" style="background:#dc2626; color:#fff;">+ 층 이용금지 등록</button>
-                            <button class="btn-tb-search" onclick="deactivateAllFloorProhibitions()" style="background:#f1f5f9; color:var(--gray-700);">📴 전체 비활성화</button>
+                        <div>
+                            <button class="btn-tb-search" onclick="openFloorProhibitionModal()" style="background:#dc2626; color:#ffffff; font-weight:700; padding:10px 18px; border-radius:8px;">+ 층 이용금지 등록</button>
                         </div>
                     </div>
 
-                    <!-- 층 이용금지 요일 필터 -->
-                    <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
-                        <span style="font-size:13px; color:var(--gray-500); font-weight:600;">요일 필터:</span>
-                        <button class="seg-btn active" id="floor-filter-all" onclick="setFloorDayFilter(-1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">전체</button>
-                        <button class="seg-btn" id="floor-filter-1" onclick="setFloorDayFilter(1)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">월</button>
-                        <button class="seg-btn" id="floor-filter-2" onclick="setFloorDayFilter(2)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">화</button>
-                        <button class="seg-btn" id="floor-filter-3" onclick="setFloorDayFilter(3)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">수</button>
-                        <button class="seg-btn" id="floor-filter-4" onclick="setFloorDayFilter(4)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">목</button>
-                        <button class="seg-btn" id="floor-filter-5" onclick="setFloorDayFilter(5)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">금</button>
-                        <button class="seg-btn" id="floor-filter-6" onclick="setFloorDayFilter(6)" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">토</button>
+                    <!-- 층 이용금지 요일 필터 (스마트폰 7등분 균등 그리드) -->
+                    <div class="filter-day-bar">
+                        <button class="seg-btn active" id="floor-filter-all" onclick="setFloorDayFilter(-1)">전체</button>
+                        <button class="seg-btn" id="floor-filter-1" onclick="setFloorDayFilter(1)">월</button>
+                        <button class="seg-btn" id="floor-filter-2" onclick="setFloorDayFilter(2)">화</button>
+                        <button class="seg-btn" id="floor-filter-3" onclick="setFloorDayFilter(3)">수</button>
+                        <button class="seg-btn" id="floor-filter-4" onclick="setFloorDayFilter(4)">목</button>
+                        <button class="seg-btn" id="floor-filter-5" onclick="setFloorDayFilter(5)">금</button>
+                        <button class="seg-btn" id="floor-filter-6" onclick="setFloorDayFilter(6)">토</button>
                     </div>
 
                     <!-- 층 이용금지 목록 (동적 렌더링) -->
                     <div id="floor-prohibitions-grid" style="display:flex; flex-direction:column; gap:10px;">
                         <!-- Dynamic Render -->
+                    </div>
+
+                    <!-- 맨 밑 안전 비활성화 영역 -->
+                    <div style="margin-top:28px; padding:16px; background:#fef2f2; border:1px dashed #fecaca; border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <span style="font-size:13px; font-weight:700; color:#991b1b;">📴 층 전체 이용금지 일괄 해제</span>
+                            <p style="font-size:12px; color:#b91c1c; margin-top:2px;">등록된 모든 층별 정기 금지 일정을 한 번에 비활성화합니다. (내역은 보존됨)</p>
+                        </div>
+                        <button class="btn-tb-search" onclick="deactivateAllFloorProhibitions()" style="background:#ffffff; color:#dc2626; border:1px solid #fecaca; font-size:12.5px; font-weight:700; padding:8px 16px; border-radius:8px;">층 이용금지 전체 비활성화</button>
                     </div>
                 </div>
             </section>
@@ -944,8 +958,8 @@
                     </div>
                 </div>
                 <div class="admin-modal-footer">
-                    <button type="button" class="btn-secondary" onclick="closeFixedReservationModal()">취소</button>
-                    <button type="submit" class="btn-primary">등록하기</button>
+                    <button type="button" class="btn-secondary" onclick="closeFixedReservationModal()" style="background:#f1f5f9 !important; color:#334155 !important; border:1px solid #cbd5e1 !important; padding:10px 18px; font-weight:600; border-radius:8px; cursor:pointer;">취소</button>
+                    <button type="submit" class="btn-primary" style="background:var(--primary) !important; color:#ffffff !important; font-weight:700; padding:10px 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(30,58,138,0.3);">등록하기</button>
                 </div>
             </form>
         </div>
@@ -1045,8 +1059,8 @@
                     </div>
                 </div>
                 <div class="admin-modal-footer">
-                    <button type="button" class="btn-secondary" onclick="closeFloorProhibitionModal()">취소</button>
-                    <button type="submit" class="btn-primary" style="background:#dc2626;">등록하기</button>
+                    <button type="button" class="btn-secondary" onclick="closeFloorProhibitionModal()" style="background:#f1f5f9 !important; color:#334155 !important; border:1px solid #cbd5e1 !important; padding:10px 18px; font-weight:600; border-radius:8px; cursor:pointer;">취소</button>
+                    <button type="submit" class="btn-primary" style="background:#dc2626 !important; color:#ffffff !important; font-weight:700; padding:10px 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(220,38,38,0.3);">등록하기</button>
                 </div>
             </form>
         </div>

@@ -1180,32 +1180,78 @@ input:checked + .toggle-slider:before {
     flex-shrink: 0;
 }
 
-.btn-modal-cancel {
-    padding: 10px 18px;
-    border-radius: var(--radius-md);
-    background: var(--surface);
-    border: 1px solid var(--gray-300);
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--gray-700);
-}
-
-.btn-modal-cancel:hover {
-    background: var(--gray-100);
-}
-
-.btn-modal-confirm {
+.btn-primary, .btn-modal-confirm {
     padding: 10px 22px;
     border-radius: var(--radius-md);
-    background: var(--primary);
-    color: white;
+    background: var(--primary) !important;
+    color: #ffffff !important;
     font-size: 13.5px;
     font-weight: 700;
     box-shadow: 0 2px 8px rgba(30, 58, 138, 0.25);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
 }
 
-.btn-modal-confirm:hover {
-    background: var(--primary-dark);
+.btn-primary:hover, .btn-modal-confirm:hover {
+    background: var(--primary-dark) !important;
+}
+
+.btn-secondary, .btn-modal-cancel {
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    background: var(--surface) !important;
+    border: 1px solid var(--gray-300) !important;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--gray-700) !important;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.btn-secondary:hover, .btn-modal-cancel:hover {
+    background: var(--gray-100) !important;
+}
+
+/* 요일 필터 가로 바 (전체/월~토 스마트폰 7등분 균등) */
+.filter-day-bar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.filter-day-bar .seg-btn {
+    padding: 9px 0 !important;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--gray-300);
+    color: var(--gray-700);
+    transition: all 0.15s ease;
+}
+
+.filter-day-bar .seg-btn.active {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.25);
+}
+
+#subview-fixed-floors .filter-day-bar .seg-btn.active {
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
 }
 
 .btn-modal-danger {

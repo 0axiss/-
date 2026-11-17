@@ -429,11 +429,10 @@
                 <!-- 탭별 안내 문구 및 단일 글쓰기 버튼 바 -->
                 <div class="board-sub-bar" id="board-sub-bar">
                     <div class="bsb-info" id="bsb-info-text">
-                        <span class="bsb-icon">📌</span>
                         <span>학과 관리실 공식 공지사항</span>
                     </div>
                     <button class="btn-write-inquiry" id="btn-write-inquiry" onclick="openInquiryModal()" style="display:none;">
-                        <span>✏️ 문의글 작성</span>
+                        <span>문의글 작성</span>
                     </button>
                 </div>
 
@@ -616,7 +615,7 @@
             <div class="modal-dialog board-detail-dialog">
                 <div class="modal-header">
                     <div class="modal-title-group">
-                        <span class="modal-subtitle" id="post-detail-category">📢 공지사항</span>
+                        <span class="modal-subtitle" id="post-detail-category">공지사항</span>
                         <h3 class="modal-title" id="post-detail-title">공지 제목</h3>
                     </div>
                     <button class="modal-close-btn" onclick="closeBoardDetailModal()">✕</button>
@@ -631,7 +630,7 @@
                     <!-- 답변 영역 (문의글일 때) -->
                     <div class="post-answer-box" id="post-answer-box" style="display:none;">
                         <div class="pab-header">
-                            <span class="pab-badge">💬 관리자 공식 답변</span>
+                            <span class="pab-badge">관리자 공식 답변</span>
                             <span class="pab-date" id="post-answer-date">2026.11.05</span>
                         </div>
                         <div class="pab-content" id="post-answer-content">
@@ -665,13 +664,13 @@
                             <label class="vis-option-label" id="vis-label-staff">
                                 <input type="radio" name="inquiry-visibility" value="staff" checked onchange="onVisibilityChange()">
                                 <div class="vis-btn-pill">
-                                    <span>🔒 관계자 비공개</span>
+                                    <span>관계자 공개</span>
                                 </div>
                             </label>
                             <label class="vis-option-label" id="vis-label-public">
                                 <input type="radio" name="inquiry-visibility" value="public" onchange="onVisibilityChange()">
                                 <div class="vis-btn-pill">
-                                    <span>🌐 전체 공개</span>
+                                    <span>전체 공개</span>
                                 </div>
                             </label>
                         </div>
@@ -716,9 +715,8 @@
         <div id="board-auth-modal" class="app-modal" style="display:none;">
             <div class="modal-backdrop" onclick="closeBoardAuthModal()"></div>
             <div class="modal-dialog auth-dialog">
-                <div class="auth-icon-wrap">🔒</div>
-                <h3 class="auth-title">비공개 문의글 열람 확인</h3>
-                <p class="auth-desc">이 글은 <strong>관계자(관리자) 및 작성자 본인</strong>만 열람할 수 있습니다.<br>작성 시 입력한 <strong>학번</strong>을 입력해주세요.</p>
+                <h3 class="auth-title">관계자 공개 문의글 열람</h3>
+                <p class="auth-desc"><strong>관계자 공개</strong> 글입니다.<br>작성 시 입력한 <strong>학번</strong>을 입력해주세요.</p>
                 <div class="form-group" style="margin-top:16px;">
                     <input type="text" id="input-auth-sid" class="form-input" placeholder="학번 입력 (예: 20241234)" style="text-align:center;">
                 </div>
@@ -747,7 +745,7 @@
     <script src="js/navigation.js?v=20261116_v8"></script>
     <script src="js/timetable.js?v=20261117_v1"></script>
     <script src="js/reservation.js?v=20261116_v6"></script>
-    <script src="js/board.js?v=20261115_v3"></script>
+    <script src="js/board.js?v=20261117_v1"></script>
     <script src="js/app.js?v=20261115_v3"></script>
 </body>
 

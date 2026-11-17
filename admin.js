@@ -1673,7 +1673,7 @@ function renderAdminNoticeTable() {
     });
 
     if (notices.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:32px; color:var(--gray-500);">등록된 공지사항이 없습니다. [➕ 새 공지사항 작성] 버튼을 눌러 등록하세요.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:32px; color:var(--gray-500);">등록된 공지사항이 없습니다. [새 공지사항 작성] 버튼을 눌러 등록하세요.</td></tr>`;
         return;
     }
 
@@ -1683,7 +1683,7 @@ function renderAdminNoticeTable() {
 
         tr.innerHTML = `
             <td>
-                ${n.isImportant ? '<span class="badge-status blocked" style="background:#fef3c7; color:#b45309;">★ 중요</span>' : '<span class="badge-status confirmed">일반</span>'}
+                ${n.isImportant ? '<span class="badge-status blocked" style="background:#fef3c7; color:#b45309;">중요</span>' : '<span class="badge-status confirmed">일반</span>'}
             </td>
             <td>
                 <strong style="color:var(--gray-900); font-size:14px;">${escapeHtml(n.title)}</strong>
@@ -1858,8 +1858,8 @@ function renderAdminInquiryTable() {
         tr.innerHTML = `
             <td>
                 ${isSecret 
-                    ? '<span class="badge-status" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">🔒 관계자</span>'
-                    : '<span class="badge-status confirmed">🌐 전체공개</span>'}
+                    ? '<span class="badge-status" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">관계자 공개</span>'
+                    : '<span class="badge-status confirmed">전체 공개</span>'}
             </td>
             <td>
                 <strong style="color:var(--gray-900); font-size:14px;">${escapeHtml(inq.title)}</strong>
@@ -1872,7 +1872,7 @@ function renderAdminInquiryTable() {
             <td>${dateStr}</td>
             <td style="text-align:center;">
                 ${isAnswered 
-                    ? '<span class="badge-status confirmed" style="background:#dcfce7; color:#15803d;">✓ 답변완료</span>'
+                    ? '<span class="badge-status confirmed" style="background:#dcfce7; color:#15803d;">답변 완료</span>'
                     : '<span class="badge-status blocked" style="background:#fef2f2; color:#b91c1c;">답변대기</span>'}
             </td>
             <td style="text-align:center;">
@@ -1913,10 +1913,10 @@ function openAdminInquiryModal(inquiryId) {
         visBadge.className = "badge-status";
         visBadge.style.background = "#f1f5f9";
         visBadge.style.color = "#475569";
-        visBadge.textContent = "🔒 관계자에게만 공개 (비공개)";
+        visBadge.textContent = "관계자 공개";
     } else {
         visBadge.className = "badge-status confirmed";
-        visBadge.textContent = "🌐 전체 공개";
+        visBadge.textContent = "전체 공개";
     }
 
     const answerStatus = document.getElementById("admin-answer-status");

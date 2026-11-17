@@ -144,7 +144,6 @@ function switchBoardCategory(category) {
         if (btnInquiry) btnInquiry.classList.remove("active");
         if (subInfo) {
             subInfo.innerHTML = `
-                <span class="bsb-icon">📢</span>
                 <span>학과 관리실 공식 공지사항</span>
             `;
         }
@@ -154,7 +153,6 @@ function switchBoardCategory(category) {
         if (btnInquiry) btnInquiry.classList.add("active");
         if (subInfo) {
             subInfo.innerHTML = `
-                <span class="bsb-icon">🔒</span>
                 <span>실명제로 운영되는 문의게시판입니다.</span>
             `;
         }
@@ -182,9 +180,8 @@ function renderBoardList() {
     if (filtered.length === 0) {
         container.innerHTML = `
             <div class="empty-state" style="padding:40px 20px; text-align:center;">
-                <div class="empty-icon" style="font-size:36px; margin-bottom:8px;">${currentBoardCategory === 'notice' ? '📢' : '💬'}</div>
                 <h4 style="font-size:15px; color:var(--gray-800); margin-bottom:4px;">등록된 ${currentBoardCategory === 'notice' ? '공지사항이' : '문의글이'} 없습니다</h4>
-                <p style="font-size:13px; color:var(--gray-500);">${currentBoardCategory === 'notice' ? '새로운 공지사항이 등록되면 이곳에 표시됩니다.' : '궁금한 점이 있다면 [실명 문의글 작성] 버튼을 눌러 남겨주세요.'}</p>
+                <p style="font-size:13px; color:var(--gray-500);">${currentBoardCategory === 'notice' ? '새로운 공지사항이 등록되면 이곳에 표시됩니다.' : '궁금한 점이 있다면 [문의글 작성] 버튼을 눌러 남겨주세요.'}</p>
             </div>
         `;
         return;
@@ -200,29 +197,27 @@ function renderBoardList() {
         let badgesHtml = "";
         if (post.category === "notice") {
             badgesHtml += `<span class="bpc-badge badge-notice">공지</span>`;
-            if (post.isImportant) badgesHtml += `<span class="bpc-badge badge-important">★ 중요</span>`;
+            if (post.isImportant) badgesHtml += `<span class="bpc-badge badge-important">중요</span>`;
         } else {
             if (isSecret) {
-                badgesHtml += `<span class="bpc-badge badge-secret">🔒 관계자 공개</span>`;
+                badgesHtml += `<span class="bpc-badge badge-secret">관계자 공개</span>`;
             } else {
-                badgesHtml += `<span class="bpc-badge badge-public">🌐 전체 공개</span>`;
+                badgesHtml += `<span class="bpc-badge badge-public">전체 공개</span>`;
             }
 
             if (isAnswered) {
-                badgesHtml += `<span class="bpc-badge badge-answered">✓ 답변 완료</span>`;
+                badgesHtml += `<span class="bpc-badge badge-answered">답변 완료</span>`;
             } else {
                 badgesHtml += `<span class="bpc-badge badge-waiting">답변 대기</span>`;
             }
         }
 
         const dateStr = post.createdAt ? post.createdAt.slice(0, 10).replace(/-/g, '.') : '';
-        const titleHtml = isSecret
-            ? `🔒 ${escapeHtml(post.title)}`
-            : escapeHtml(post.title);
+        const titleHtml = escapeHtml(post.title);
 
         let snippetText = "";
         if (isSecret) {
-            snippetText = "🔒 관계자(관리자) 및 작성자 본인만 열람 가능한 비공개 문의입니다.";
+            snippetText = "관계자 공개 글입니다.";
         } else {
             snippetText = escapeHtml(post.content);
         }
@@ -237,7 +232,7 @@ function renderBoardList() {
             <div class="bpc-bottom-row">
                 <span class="bpc-author">작성자: ${escapeHtml(post.authorName)}${post.authorId && post.authorId !== 'admin' ? ` (${maskStudentId(post.authorId)})` : ''}</span>
                 <div style="display:flex; align-items:center; gap:8px;">
-                    ${post.category === "inquiry" ? `<button type="button" class="btn-card-delete" onclick="event.stopPropagation(); deleteStudentInquiry('${post.id}')">🗑️ 삭제</button>` : ''}
+                    ${post.category === "inquiry" ? `<button type="button" class="btn-card-delete" onclick="event.stopPropagation(); deleteStudentInquiry('${post.id}')">삭제</button>` : ''}
                     <span style="font-size:12px; color:var(--primary); font-weight:600;">상세보기 ›</span>
                 </div>
             </div>
@@ -307,8 +302,8 @@ function openBoardDetailModal(post) {
     if (!modal) return;
 
     document.getElementById("post-detail-category").textContent = post.category === "notice"
-        ? (post.isImportant ? "📢 중요 공지사항" : "📢 일반 공지사항")
-        : (post.visibility === "staff" ? "🔒 1:1 비공개 문의" : "💬 전체 공개 문의");
+        ? (post.isImportant ? "중요 공지사항" : "일반 공지사항")
+        : (post.visibility === "staff" ? "관계자 공개" : "전체 공개");
 
     document.getElementById("post-detail-title").textContent = post.title;
 
@@ -342,7 +337,7 @@ function openBoardDetailModal(post) {
         if (post.category === "inquiry") {
             footer.innerHTML = `
                 <button type="button" class="btn-post-delete" onclick="deleteStudentInquiry('${post.id}')">
-                    <span>🗑️ 글 삭제</span>
+                    <span>글 삭제</span>
                 </button>
                 <button type="button" class="btn-secondary" style="min-width: 90px; height: 44px;" onclick="closeBoardDetailModal()">닫기</button>
             `;

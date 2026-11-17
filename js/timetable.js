@@ -104,7 +104,7 @@ function renderTimeScreen() {
     selectedStartSlotIdx = null;
     selectedEndSlotIdx = null;
 
-    renderSlotsGrid();
+    renderSlotsGrid(true);
     syncDropdownsWithSelection();
 }
 
@@ -150,7 +150,7 @@ function changeDate(deltaDays) {
     updateDateDisplay();
     selectedStartSlotIdx = null;
     selectedEndSlotIdx = null;
-    renderSlotsGrid();
+    renderSlotsGrid(true);
     syncDropdownsWithSelection();
 }
 
@@ -165,7 +165,7 @@ function triggerDatePicker() {
             updateDateDisplay();
             selectedStartSlotIdx = null;
             selectedEndSlotIdx = null;
-            renderSlotsGrid();
+            renderSlotsGrid(true);
             syncDropdownsWithSelection();
         }
     };
@@ -177,7 +177,7 @@ function triggerDatePicker() {
     }
 }
 
-function renderSlotsGrid() {
+function renderSlotsGrid(autoScroll = false) {
     const container = document.getElementById("slots-grid");
     if (!container) return;
 
@@ -283,8 +283,8 @@ function renderSlotsGrid() {
             const policies = getBookingPolicies();
             const maxSlots = Math.round((policies.maxDurationHours || 2) * 2);
 
-            let badgeText = "+ 30분 선택";
-            let subText = "터치하여 추가/선택";
+            let badgeText = "선택";
+            let subText = "터치하여 시간 선택";
             let dotColor = "";
             let badgeStyle = "";
 
@@ -323,16 +323,8 @@ function renderSlotsGrid() {
                 badgeStyle = "background:#f3f4f6; color:#6b7280; border:1px solid #e5e7eb;";
             } else if (isSelected) {
                 const totalText = `${currentSelectedCount * 30}분`;
-                if (currentSelectedCount === 1) {
-                    badgeText = `✓ 30분 (1/${maxSlots})`;
-                    subText = `터치하여 해제하거나 다음 시간 터치 시 연장 (최대 ${maxSlots}개)`;
-                } else if (currentSelectedCount === maxSlots) {
-                    badgeText = isEnd ? `★ 최대 ${policies.maxDurationHours}시간 (${maxSlots}/${maxSlots})` : `선택 (${slotPositionNum}/${maxSlots})`;
-                    subText = `최대 ${policies.maxDurationHours}시간 선택 완료 · 터치하여 축소 가능`;
-                } else {
-                    badgeText = isEnd ? `✓ ${totalText} (${currentSelectedCount}/${maxSlots})` : `선택 (${slotPositionNum}/${currentSelectedCount})`;
-                    subText = `현재 ${currentSelectedCount}개 선택됨 · 추가로 더 터치 가능 (최대 ${maxSlots}개)`;
-                }
+                badgeText = (isEnd && currentSelectedCount > 1) ? `✔ ${totalText}` : `✔ 선택됨`;
+                subText = "터치하여 선택 해제 가능";
             }
 
             card.innerHTML = `
@@ -379,8 +371,8 @@ function renderSlotsGrid() {
 
     container.appendChild(track);
 
-    // 오늘 날짜이고 예약 가능한 슬롯이 있으면, 첫 번째 예약 가능 슬롯으로 자동 스크롤
-    if (firstAvailableCardRef && openStatus.isOpen) {
+    // 오늘 날짜이고 예약 가능한 슬롯이 있으면, 첫 번째 예약 가능 슬롯으로 자동 스크롤 (화면 진입/날짜변경 시 1회만)
+    if (autoScroll && firstAvailableCardRef && openStatus.isOpen) {
         // 약간의 지연 후 스크롤 (DOM 렌더링 완료 후 작동하도록)
         setTimeout(() => {
             const cardTop = firstAvailableCardRef.getBoundingClientRect().top + window.scrollY;
@@ -552,7 +544,7 @@ function onSlotClick(slotIdx) {
         }
     }
 
-    renderSlotsGrid();
+    renderSlotsGrid(false);
     syncDropdownsWithSelection();
 }
 
@@ -717,7 +709,7 @@ function onStartTimeChange() {
         selectedEndSlotIdx = sIdx;
     }
     updateEndSelectOptions();
-    renderSlotsGrid();
+    renderSlotsGrid(false);
     syncDropdownsWithSelection();
 }
 
@@ -727,7 +719,7 @@ function onEndTimeChange() {
     if (eIdx !== -1) {
         selectedEndSlotIdx = eIdx;
     }
-    renderSlotsGrid();
+    renderSlotsGrid(false);
     syncDropdownsWithSelection();
 }
 

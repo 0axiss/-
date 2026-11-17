@@ -1049,7 +1049,7 @@ select {
     border: 1.5px solid var(--gray-200);
     background: var(--surface);
     cursor: pointer;
-    transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.12s ease, border-color 0.12s ease;
     position: relative;
     user-select: none;
     touch-action: manipulation;
@@ -1059,14 +1059,14 @@ select {
     pointer-events: none;
 }
 
-.tt-slot-card:hover:not(.reserved) {
-    border-color: var(--primary-light);
-    background: var(--primary-bg);
-    transform: translateX(2px);
+.tt-slot-card:hover:not(.reserved):not(.selected) {
+    border-color: #93c5fd;
+    background: #f8fafc;
 }
 
 .tt-slot-card:active:not(.reserved) {
-    transform: scale(0.985);
+    /* 덜컹거림 및 크기 축소 제거 */
+    transform: none;
 }
 
 .tt-slot-left {
@@ -1111,32 +1111,36 @@ select {
     white-space: nowrap;
 }
 
-/* Selected State */
+/* Selected State - 단정하고 간결한 체크 표시 스타일 */
 .tt-slot-card.selected {
-    background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
-    border-color: var(--primary);
-    color: white;
-    box-shadow: 0 4px 14px rgba(30, 58, 138, 0.22);
+    background: #eff6ff !important;
+    border-color: #2563eb !important;
+    color: var(--gray-800);
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12) !important;
 }
 
 .tt-slot-card.selected .tt-slot-time {
-    color: white;
-    font-weight: 800;
+    color: #1e3a8a !important;
+    font-weight: 700;
 }
 
 .tt-slot-card.selected .tt-slot-subtext {
-    color: rgba(255, 255, 255, 0.85);
+    color: #3b82f6 !important;
 }
 
 .tt-slot-card.selected .tt-slot-dot {
-    background: white;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+    background: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25) !important;
 }
 
 .tt-slot-card.selected .tt-slot-badge {
-    background: rgba(255, 255, 255, 0.25);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 3px 9px;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
 }
 
 /* Start & End connectors */

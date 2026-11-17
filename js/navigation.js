@@ -13,7 +13,13 @@ let statusViewMode = "timeline"; // 'timeline' or 'list'
 let overviewBuilding = "신관";
 let overviewDate = new Date();
 
-function navTo(screenId) {
+let isHistoryInitialized = false;
+let lastBackPressTime = 0;
+let isExiting = false;
+
+function navTo(screenId, pushHistory = true) {
+    const prevScreen = currentScreen;
+
     document.querySelectorAll(".view-screen").forEach(el => {
         el.classList.remove("active");
     });
@@ -33,6 +39,31 @@ function navTo(screenId) {
         if (typeof initMyScreen === "function") initMyScreen();
     } else if (screenId === "board-screen") {
         if (typeof renderBoardScreen === "function") renderBoardScreen();
+    } else if (screenId === "room-screen" && !pushHistory) {
+        if (typeof renderFloorTabsAndRooms === "function") {
+            const titleEl = document.getElementById("room-screen-building-name");
+            if (titleEl && selectedBuilding) titleEl.textContent = selectedBuilding;
+            renderFloorTabsAndRooms();
+        }
+    } else if (screenId === "time-screen" && !pushHistory) {
+        if (typeof renderTimeScreen === "function" && selectedRoom) {
+            renderTimeScreen();
+        }
+    }
+
+    // 모바일 브라우저 및 안드로이드 하단 물리/제스처 뒤로가기 버튼 히스토리 스택 연동
+    if (pushHistory) {
+        try {
+            if (!isHistoryInitialized) {
+                isHistoryInitialized = true;
+                history.replaceState({ screen: screenId, root: true }, "");
+                history.pushState({ screen: screenId }, "");
+            } else if (prevScreen !== screenId) {
+                history.pushState({ screen: screenId }, "");
+            }
+        } catch (e) {
+            console.warn("Browser history pushState warning:", e);
+        }
     }
 }
 
@@ -616,4 +647,119 @@ function renderOverviewDashboard() {
         roomsList.appendChild(floorSec);
     });
 }
+
+// =============================================================================
+// 모바일 브라우저 및 안드로이드(갤럭시/삼성폰 등) 하단 시스템 뒤로가기 버튼 처리 엔진
+// =============================================================================
+
+function getActiveModalId() {
+    const modals = [
+        "board-auth-modal",
+        "inquiry-modal",
+        "board-detail-modal",
+        "cancel-modal",
+        "success-modal",
+        "reservation-modal"
+    ];
+    for (const id of modals) {
+        const el = document.getElementById(id);
+        if (el) {
+            const display = window.getComputedStyle(el).display;
+            if (display !== "none") {
+                return id;
+            }
+        }
+    }
+    return null;
+}
+
+function closeActiveModalById(modalId) {
+    if (modalId === "board-auth-modal" && typeof closeBoardAuthModal === "function") {
+        closeBoardAuthModal();
+        return true;
+    }
+    if (modalId === "inquiry-modal" && typeof closeInquiryModal === "function") {
+        closeInquiryModal();
+        return true;
+    }
+    if (modalId === "board-detail-modal" && typeof closeBoardDetailModal === "function") {
+        closeBoardDetailModal();
+        return true;
+    }
+    if (modalId === "cancel-modal" && typeof closeCancelModal === "function") {
+        closeCancelModal();
+        return true;
+    }
+    if (modalId === "success-modal" && typeof closeSuccessModal === "function") {
+        closeSuccessModal();
+        return true;
+    }
+    if (modalId === "reservation-modal" && typeof closeReservationModal === "function") {
+        closeReservationModal();
+        return true;
+    }
+    const el = document.getElementById(modalId);
+    if (el) {
+        el.style.display = "none";
+        return true;
+    }
+    return false;
+}
+
+window.addEventListener("popstate", (e) => {
+    if (isExiting) return;
+
+    // 1. 열려 있는 모달 창이 있다면 폰 뒤로가기 시 모달부터 닫음 (화면 이탈 방지)
+    const activeModalId = getActiveModalId();
+    if (activeModalId) {
+        closeActiveModalById(activeModalId);
+        // 모달만 닫히고 현재 보고 있던 화면을 유지하도록 히스토리 상태 1개 복원
+        history.pushState({ screen: currentScreen }, "");
+        return;
+    }
+
+    // 2. 히스토리 상태에 이전 화면 정보가 있는 경우
+    if (e.state && e.state.screen) {
+        const targetScreen = e.state.screen;
+
+        // 메인 홈 화면(루트)에서 뒤로가기를 눌렀을 때
+        if (e.state.root || (targetScreen === "building-screen" && currentScreen === "building-screen")) {
+            const now = Date.now();
+            if (now - lastBackPressTime < 2000) {
+                isExiting = true;
+                history.back();
+                return;
+            } else {
+                lastBackPressTime = now;
+                history.pushState({ screen: "building-screen" }, "");
+                if (typeof showToast === "function") {
+                    showToast("'뒤로' 버튼을 한 번 더 누르면 종료됩니다.", "normal");
+                }
+                return;
+            }
+        }
+
+        // 바로 이전 화면으로 안전하게 전환
+        navTo(targetScreen, false);
+        return;
+    }
+
+    // 3. e.state가 없거나 null인 경우 (외부 링크 진입 등)
+    if (currentScreen !== "building-screen") {
+        navTo("building-screen", false);
+        history.pushState({ screen: "building-screen" }, "");
+    } else {
+        const now = Date.now();
+        if (now - lastBackPressTime < 2000) {
+            isExiting = true;
+            history.back();
+        } else {
+            lastBackPressTime = now;
+            history.pushState({ screen: "building-screen" }, "");
+            if (typeof showToast === "function") {
+                showToast("'뒤로' 버튼을 한 번 더 누르면 종료됩니다.", "normal");
+            }
+        }
+    }
+});
 

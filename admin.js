@@ -1,18 +1,40 @@
 /**
+ * =================================================================
  * 총신대학교 교회음악과 연습실 관리자 시스템 코어 엔진 (admin.js)
  * Executive Control & Security Engine for Practice Room Reservation
+ * =================================================================
+ * [📑 항목별 전체 목차 (Table of Contents)]
+ * 01. 공통 상수 및 스토리지 키 정의 (Constants & Storage Keys)
+ * 02. 유틸리티 함수 (Time/Date/Format Helpers)
+ * 03. 보안 및 인증 가드 (Security Guard & Auth Controller)
+ * 04. 데이터 엔진 계층 (Data Engine - Local & Remote CRUD)
+ * 05. 탭 전환 및 네비게이션 제어 (Tab Navigation Controller)
+ * 06. [TAB 1] 운영 대시보드 (Dashboard & Live Monitoring)
+ * 07. [TAB 2] 전체 예약 관리 & 검색 필터 (Reservations Manager)
+ * 08. [TAB 2 모달] 관리자 예약 수정 모달 제어 (Edit Reservation)
+ * 09. [TAB 2 모달] 관리자 직권 취소 모달 제어 (Admin Cancel)
+ * 10. [TAB 3] 연습실 및 점검 관리 (Rooms & Facility Manager)
+ * 11. [TAB 4] 예약 정책 설정 (Policies Configuration)
+ * 12. [TAB 5] 관리자 감사 로그 / 작업 이력 (Audit Logs)
+ * 13. [TAB 6] 게시판 관리 엔진 (Notice & Inquiry Management)
+ * 14. [TAB 3-1] 고정예약 관리 (Fixed Reservations - 레슨/반복 일정)
+ * 15. [TAB 3-2] 층 전체 정기 이용금지 관리 (Floor Prohibitions - 채플/청소/점검)
+ * 16. 앱 라이프사이클 부트스트랩 (App Bootstrapping & Init)
+ * =================================================================
  */
 
 // =================================================================
-// 1. 공통 상수 및 스토리지 키 정의
+// 01. 공통 상수 및 스토리지 키 정의 (Constants & Storage Keys)
 // =================================================================
-const STORAGE_KEY = "CHONGSHIN_MUSIC_RESERVATIONS_V2";     // 학생 예약 저장소와 100% 동일
-const ADMIN_STORAGE_KEY = "CHONGSHIN_ADMIN_ACCOUNTS";       // 관리자 계정 저장소
-const ADMIN_SESSION_KEY = "CHONGSHIN_ADMIN_SESSION";       // 관리자 인증 세션 토큰
-const ROOM_SETTINGS_KEY = "CHONGSHIN_ROOM_SETTINGS";       // 연습실 상태 및 점검 차단
-const POLICIES_KEY = "CHONGSHIN_BOOKING_POLICIES";         // 예약 정책 설정
-const AUDIT_LOGS_KEY = "CHONGSHIN_ADMIN_LOGS";             // 관리자 감사 로그
-const BOARD_STORAGE_KEY = "CHONGSHIN_MUSIC_BOARD_POSTS_V1"; // 게시판 데이터 저장소
+const STORAGE_KEY = "CHONGSHIN_MUSIC_RESERVATIONS_V2";         // 학생 예약 저장소와 100% 동일
+const ADMIN_STORAGE_KEY = "CHONGSHIN_ADMIN_ACCOUNTS";           // 관리자 계정 저장소
+const ADMIN_SESSION_KEY = "CHONGSHIN_ADMIN_SESSION";           // 관리자 인증 세션 토큰
+const ROOM_SETTINGS_KEY = "CHONGSHIN_ROOM_SETTINGS";           // 연습실 상태 및 점검 차단
+const POLICIES_KEY = "CHONGSHIN_BOOKING_POLICIES";             // 예약 정책 설정
+const AUDIT_LOGS_KEY = "CHONGSHIN_ADMIN_LOGS";                 // 관리자 감사 로그
+const BOARD_STORAGE_KEY = "CHONGSHIN_MUSIC_BOARD_POSTS_V1";     // 게시판 데이터 저장소
+const FIXED_RESERVATIONS_KEY = "CHONGSHIN_FIXED_RESERVATIONS"; // 고정예약(레슨 등 반복) 저장소
+const FLOOR_PROHIBITIONS_KEY = "CHONGSHIN_FLOOR_PROHIBITIONS"; // 층 전체 정기 이용금지 저장소
 
 const OPERATING_START_HOUR = 9;   // 09:00
 const OPERATING_END_HOUR = 22;    // 22:00
@@ -147,7 +169,7 @@ const BASE_BUILDINGS = {
 };
 
 // =================================================================
-// 2. 유틸리티 함수
+// 02. 유틸리티 함수 (Time/Date/Format Helpers)
 // =================================================================
 function timeStrToMinutes(str) {
     if (!str) return 0;
@@ -209,7 +231,7 @@ async function hashPassword(pw) {
 }
 
 // =================================================================
-// 3. 보안 및 인증 가드 (Security Guard & Auth Controller)
+// 03. 보안 및 인증 가드 (Security Guard & Auth Controller)
 // =================================================================
 
 // 초기 관리자 계정 초기화 (최초 1회 안전 등록)
@@ -377,7 +399,7 @@ function renderAppByAuth() {
 }
 
 // =================================================================
-// 4. 데이터 엔진 계층 (Data Engine)
+// 04. 데이터 엔진 계층 (Data Engine)
 // =================================================================
 
 // 전체 예약 목록 읽기
@@ -536,7 +558,7 @@ function checkOverlapAdmin(dateStr, building, roomNum, startMin, endMin, exclude
 }
 
 // =================================================================
-// 5. 탭 전환 및 메인 컨트롤러
+// 05. 탭 전환 및 메인 컨트롤러 (Tab Navigation Controller)
 // =================================================================
 let currentTab = "dashboard";
 
@@ -571,7 +593,7 @@ function switchAdminTab(tabName) {
 }
 
 // =================================================================
-// 6. TAB 1: 운영 대시보드 렌더링 (Dashboard)
+// 06. TAB 1: 운영 대시보드 렌더링 (Dashboard & Monitoring)
 // =================================================================
 function initDashboard() {
     renderDashboard();
@@ -702,7 +724,7 @@ function renderDashboard() {
 }
 
 // =================================================================
-// 7. TAB 2: 전체 예약 관리 렌더링 & 필터 (Reservations Manager)
+// 07. TAB 2: 전체 예약 관리 렌더링 & 필터 (Reservations Manager)
 // =================================================================
 let filterState = {
     date: "",
@@ -874,7 +896,7 @@ function showReservationDetail(resId) {
 }
 
 // =================================================================
-// 8. 예약 수정 모달 제어 (Edit Reservation)
+// 08. [TAB 2 모달] 예약 수정 모달 제어 (Edit Reservation)
 // =================================================================
 let currentEditingRes = null;
 
@@ -1030,7 +1052,7 @@ function submitEditReservation() {
 }
 
 // =================================================================
-// 9. 관리자 직권 취소 모달 제어 (Admin Cancel)
+// 09. [TAB 2 모달] 관리자 직권 취소 모달 제어 (Admin Cancel)
 // =================================================================
 let cancelTargetId = null;
 
@@ -1969,24 +1991,8 @@ function deleteAdminInquiry() {
 }
 
 // =================================================================
-// 14. 앱 초기화 (App Bootstrapping)
+// 14. [TAB 3-1] 고정예약 관리 (Fixed Reservations - 레슨 등 매주 반복 일정)
 // =================================================================
-document.addEventListener("DOMContentLoaded", async () => {
-    // 1. 관리자 마스터 계정 초기화 확인
-    await initAdminAccounts();
-
-    // 2. 권한 검증 및 화면 상태 표시
-    renderAppByAuth();
-
-    // 3. 게시판 배지 갱신
-    updateAdminBoardBadges();
-});
-
-// =================================================================
-// 고정예약 관리 (Fixed Reservations - 레슨 등 매주 반복 일정)
-// =================================================================
-
-const FIXED_RESERVATIONS_KEY = "CHONGSHIN_FIXED_RESERVATIONS";
 let fixedDayFilter = -1; // -1=전체, 1~6=월~토
 
 function getFixedReservations() {
@@ -2227,9 +2233,8 @@ function deactivateAllFixedReservations() {
 }
 
 // =================================================================
-// 층 전체 정기 이용금지 관리 (Floor Prohibitions - 채플, 청소, 시설보수 등)
+// 15. [TAB 3-2] 층 전체 정기 이용금지 관리 (Floor Prohibitions - 채플, 청소, 시설보수 등)
 // =================================================================
-const FLOOR_PROHIBITIONS_KEY = "CHONGSHIN_FLOOR_PROHIBITIONS";
 let floorDayFilter = -1; // -1=전체, 1~6=월~토
 
 /**
@@ -2514,4 +2519,19 @@ function deactivateAllFloorProhibitions() {
     renderFloorProhibitionsManager();
     showAdminToast(`전체 층 이용금지 ${list.length}건이 비활성화되었습니다.`, "success");
 }
+
+// =================================================================
+// 16. 앱 라이프사이클 부트스트랩 (App Bootstrapping & Init)
+// =================================================================
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. 관리자 마스터 계정 초기화 확인
+    await initAdminAccounts();
+
+    // 2. 권한 검증 및 화면 상태 표시
+    renderAppByAuth();
+
+    // 3. 게시판 배지 갱신
+    updateAdminBoardBadges();
+});
+
 

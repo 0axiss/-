@@ -1973,6 +1973,7 @@ select {
     max-width: 480px;
     background: var(--surface);
     border-radius: 24px 24px 0 0;
+    border: 1px solid var(--gray-200);
     box-shadow: var(--shadow-float);
     max-height: 90vh;
     overflow-y: auto;
@@ -1982,21 +1983,14 @@ select {
 }
 
 .modal-dialog::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary), var(--accent-gold));
-    z-index: 15;
-    pointer-events: none;
+    /* 테두리 그라데이션 제거 - 깔끔한 단색 디자인 */
+    display: none;
 }
 
 @media (min-width: 481px) {
     .modal-dialog {
         border-radius: 20px;
-        max-width: 420px;
+        max-width: 440px;
     }
 }
 
@@ -2689,29 +2683,73 @@ select {
     color: var(--primary);
 }
 
-/* Detail Modal Styles */
-.board-detail-dialog {
-    max-width: 520px;
-    width: 95%;
+/* Detail Modal Styles - 공지사항 및 게시글 상세 열람 모달 */
+#board-detail-modal {
+    align-items: center !important;
+    padding: 16px;
 }
+
+.board-detail-dialog {
+    max-width: 580px;
+    width: 95%;
+    min-height: 520px; /* 화면의 반틈만 보이던 문제 해결 */
+    max-height: 85vh;
+    border-radius: 20px !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--gray-200) !important;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18);
+}
+
+.board-detail-dialog::before {
+    /* 테두리 그라데이션 제거 - 깔끔한 단색 테두리 */
+    display: none !important;
+}
+
+.board-detail-dialog .modal-header {
+    flex-shrink: 0;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--gray-200);
+    background: #ffffff;
+}
+
+.board-detail-dialog .modal-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 18px 22px 20px !important;
+}
+
 .post-detail-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px;
-    padding: 12px 0;
+    padding: 10px 0;
     border-bottom: 1px solid var(--gray-200);
     font-size: 13px;
     color: var(--gray-500);
 }
+
 .post-detail-body {
     padding: 18px 0;
-    font-size: 14px;
-    line-height: 1.7;
+    font-size: 14.5px;
+    line-height: 1.75;
     color: var(--gray-800);
     white-space: pre-wrap;
-    min-height: 90px;
+    min-height: 220px;
+    flex: 1;
+}
+
+.board-detail-footer {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--gray-100);
+    flex-shrink: 0;
 }
 .post-answer-box {
     background: #f0fdf4;

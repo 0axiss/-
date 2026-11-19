@@ -221,6 +221,7 @@ function renderFloorTabsAndRooms(activeFloorName = "ALL") {
                     selectRoom(floor, room);
                 };
 
+                const badgeInfo = getRoomBadgeInfo(selectedBuilding, room);
                 let badgeClass = "";
                 if (room.category === "organ") badgeClass = "organ";
                 else if (room.category === "grand") badgeClass = "grand";
@@ -231,7 +232,7 @@ function renderFloorTabsAndRooms(activeFloorName = "ALL") {
                         <span class="rci-number">${room.number}호</span>
                         <span class="rci-status-dot ${isCurrentlyOccupied ? 'occupied' : ''}" title="${isCurrentlyOccupied ? '현재 사용중' : '현재 비어있음'}"></span>
                     </div>
-                    ${room.type ? `<span class="rci-badge ${badgeClass}">${escapeHtml(room.type)}</span>` : '<span class="rci-badge">일반 연습실</span>'}
+                    ${badgeInfo.label ? `<span class="rci-badge ${badgeInfo.color ? '' : badgeClass}" style="${buildBadgeColorStyle(badgeInfo.color)}">${escapeHtml(badgeInfo.label)}</span>` : '<span class="rci-badge">일반 연습실</span>'}
                     <div class="rci-footer">
                         <span class="rci-live-text ${isCurrentlyOccupied ? 'busy' : 'avail'}">
                             ${isCurrentlyOccupied ? '● 현재 사용중' : '○ 이용 가능'}
@@ -637,7 +638,7 @@ function renderOverviewDashboard() {
             card.innerHTML = `
                 <div class="orc-info">
                     <span class="orc-room-num">${room.number}호</span>
-                    <span class="orc-room-type">${escapeHtml(room.type || '연습실')}</span>
+                    <span class="orc-room-type">${escapeHtml(getRoomBadgeInfo(overviewBuilding, room).label || '연습실')}</span>
                 </div>
                 <div class="orc-timeline-bar">
                     ${barSegmentsHtml}

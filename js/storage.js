@@ -36,6 +36,27 @@ function getRoomSettings() {
     }
 }
 
+/**
+ * 연습실 번호 아래 표시되는 구분 배지(오르간/그랜드 등)의 관리자 지정 문구/색상 조회
+ * @returns {{ label: string, color: string|null }} color 가 null 이면 기본 스타일 사용
+ */
+function getRoomBadgeInfo(building, room) {
+    const settings = getRoomSettings();
+    const s = settings[`${building}_${room.number}`] || {};
+    const label = (s.badgeLabel && String(s.badgeLabel).trim()) ? String(s.badgeLabel).trim() : "";
+    const color = /^#[0-9a-fA-F]{6}$/.test(s.badgeColor || "") ? s.badgeColor : null;
+    return { label: label || room.type || "", color: color };
+}
+
+// 배지 색상(HEX)으로부터 inline style 생성 (연한 배경 + 진한 글씨 + 테두리)
+function buildBadgeColorStyle(hex) {
+    if (!hex) return "";
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `background:rgba(${r},${g},${b},0.14); color:${hex}; border:1px solid rgba(${r},${g},${b},0.35);`;
+}
+
 function getAllReservations() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);

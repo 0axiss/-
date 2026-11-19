@@ -95,7 +95,10 @@ function renderTimeScreen() {
     document.getElementById("time-screen-nav-sub").textContent = `${selectedBuilding} · ${selectedFloor.name}`;
     document.getElementById("time-screen-room-name").textContent = `${selectedRoom.number}호`;
 
-    document.getElementById("rh-type-tag").textContent = selectedRoom.type || "일반 연습실";
+    const typeTagEl = document.getElementById("rh-type-tag");
+    const tagInfo = getRoomBadgeInfo(selectedBuilding, selectedRoom);
+    typeTagEl.textContent = tagInfo.label || "일반 연습실";
+    typeTagEl.style.cssText = tagInfo.color ? buildBadgeColorStyle(tagInfo.color) : "";
     document.getElementById("rh-room-title").textContent = `${selectedRoom.number}호 연습실`;
     document.getElementById("rh-floor-info").textContent = `${selectedBuilding} ${selectedFloor.title} (${selectedFloor.name}) · 30분 단위 예약`;
 

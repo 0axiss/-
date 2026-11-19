@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="admin.css?v=20261116_v10">
+    <link rel="stylesheet" href="admin.css?v=20261119_v2">
 </head>
 
 <body>
@@ -1134,6 +1134,55 @@
 
 
     <!-- =================================================================
+         MODAL 3-B: 연습실 구분 배지(문구/색상) 수정 모달
+    ================================================================= -->
+    <div id="modal-room-badge" class="admin-modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeRoomBadgeModal()"></div>
+        <div class="admin-modal-dialog">
+            <div class="admin-modal-header">
+                <h3>연습실 구분 표시 수정</h3>
+                <button class="btn-modal-close" onclick="closeRoomBadgeModal()">✕</button>
+            </div>
+            <form onsubmit="event.preventDefault(); saveRoomBadge();">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="badge-room-key">
+
+                    <div class="badge-edit-target" id="badge-edit-target-name">신관 B12호</div>
+
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label>미리보기</label>
+                        <div class="badge-preview-box">
+                            <span id="badge-preview" class="badge-preview">오르간</span>
+                        </div>
+                    </div>
+
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label for="badge-label-input">표시 문구</label>
+                        <input type="text" id="badge-label-input" maxlength="20" placeholder="예: 오르간, 그랜드, 업라이트" oninput="updateBadgePreview()">
+                    </div>
+
+                    <div class="form-field">
+                        <label>배지 색상</label>
+                        <div class="badge-color-palette" id="badge-color-palette"></div>
+                        <div class="badge-custom-color">
+                            <span>직접 선택</span>
+                            <input type="color" id="badge-color-input" value="#1e3a8a" oninput="onBadgeCustomColor(this.value)">
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-modal-footer" style="justify-content:space-between;">
+                    <button type="button" class="btn-action cancel" onclick="resetRoomBadge()">기본값으로</button>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn-modal-cancel" onclick="closeRoomBadgeModal()">취소</button>
+                        <button type="submit" class="btn-modal-confirm">저장하기</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- =================================================================
          MODAL 4: 연습실 등록/수정 모달 (Room Form Modal)
     ================================================================= -->
     <div id="modal-room-form" class="admin-modal" style="display:none;">
@@ -1286,7 +1335,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="firebase-sync.js?v=20261116_v6"></script>
 
-    <script src="admin.js?v=20261119_v1"></script>
+    <script src="admin.js?v=20261119_v2"></script>
 </body>
 
 </html>

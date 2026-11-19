@@ -1227,7 +1227,7 @@ function renderRoomsManager() {
                 <div class="rmc-body">
                     <div class="rmc-spec-row">
                         <span style="color:var(--gray-500);">악기/공간 구분</span>
-                        <strong style="color:var(--primary);">${escapeHtml(room.type || '일반')}</strong>
+                        <span class="rmc-badge-preview" style="${buildAdminBadgeStyle(settings.badgeColor)}">${escapeHtml((settings.badgeLabel && settings.badgeLabel.trim()) || room.type || '일반')}</span>
                     </div>
                     <div class="rmc-spec-row">
                         <span style="color:var(--gray-500);">운영 상태</span>
@@ -1239,6 +1239,7 @@ function renderRoomsManager() {
                 </div>
                 <div class="rmc-footer">
                     <button class="btn-action edit" onclick="openBlockRoomModal('${rKey}', '${b.name} ${room.number}호')">점검/시간 차단</button>
+                    <button class="btn-action detail" onclick="openRoomBadgeModal('${b.name}', '${room.number}')">구분 표시 수정</button>
                     ${activeBlocks.length > 0 ? `<button class="btn-action cancel" onclick="clearRoomBlocks('${rKey}')">차단 해제</button>` : ''}
                 </div>
             `;
@@ -1417,6 +1418,146 @@ function clearRoomBlocks(rKey) {
     addAuditLog("ROOM_BLOCK_CLEAR", rKey, "모든 차단 일정 해제");
     showAdminToast("차단 일정이 모두 해제되었습니다.", "success");
     renderRoomsManager();
+}
+
+// =================================================================
+// 연습실 구분 표시(배지 문구/색상) 수정
+// =================================================================
+const BADGE_COLOR_PRESETS = [
+    "#1e3a8a", "#2563eb", "#0891b2", "#059669", "#65a30d",
+    "#d97706", "#ea580c", "#dc2626", "#db2777", "#9333ea",
+    "#475569", "#111827"
+];
+
+let badgeEditBuilding = null;
+let badgeEditRoomNumber = null;
+let badgeEditColor = null;
+
+function buildAdminBadgeStyle(hex) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex || "")) {
+        return "background:var(--gray-100); color:var(--gray-700); border:1px solid var(--gray-200);";
+    }
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `background:rgba(${r},${g},${b},0.14); color:${hex}; border:1px solid rgba(${r},${g},${b},0.35);`;
+}
+
+function findRoomInfo(buildingName, roomNumber) {
+    const b = BASE_BUILDINGS[buildingName];
+    if (!b) return null;
+    for (const f of b.floors) {
+        const r = f.rooms.find(x => String(x.number) === String(roomNumber));
+        if (r) return r;
+    }
+    return null;
+}
+
+function openRoomBadgeModal(buildingName, roomNumber) {
+    const room = findRoomInfo(buildingName, roomNumber);
+    if (!room) return;
+
+    badgeEditBuilding = buildingName;
+    badgeEditRoomNumber = roomNumber;
+
+    const settings = getRoomSettings()[`${buildingName}_${roomNumber}`] || {};
+    badgeEditColor = /^#[0-9a-fA-F]{6}$/.test(settings.badgeColor || "") ? settings.badgeColor : null;
+
+    document.getElementById("badge-room-key").value = `${buildingName}_${roomNumber}`;
+    document.getElementById("badge-edit-target-name").textContent = `${buildingName} ${roomNumber}호`;
+    document.getElementById("badge-label-input").value = (settings.badgeLabel && settings.badgeLabel.trim()) || room.type || "";
+    document.getElementById("badge-color-input").value = badgeEditColor || "#1e3a8a";
+
+    renderBadgePalette();
+    updateBadgePreview();
+    document.getElementById("modal-room-badge").style.display = "flex";
+}
+
+function closeRoomBadgeModal() {
+    document.getElementById("modal-room-badge").style.display = "none";
+    badgeEditBuilding = null;
+    badgeEditRoomNumber = null;
+}
+
+function renderBadgePalette() {
+    const wrap = document.getElementById("badge-color-palette");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+
+    // 기본(색상 지정 안 함) 칩
+    const defChip = document.createElement("button");
+    defChip.type = "button";
+    defChip.className = `badge-color-chip default ${badgeEditColor ? "" : "selected"}`;
+    defChip.textContent = "기본";
+    defChip.onclick = () => { badgeEditColor = null; renderBadgePalette(); updateBadgePreview(); };
+    wrap.appendChild(defChip);
+
+    BADGE_COLOR_PRESETS.forEach(hex => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = `badge-color-chip ${badgeEditColor === hex ? "selected" : ""}`;
+        chip.style.background = hex;
+        chip.setAttribute("aria-label", hex);
+        chip.onclick = () => {
+            badgeEditColor = hex;
+            document.getElementById("badge-color-input").value = hex;
+            renderBadgePalette();
+            updateBadgePreview();
+        };
+        wrap.appendChild(chip);
+    });
+}
+
+function onBadgeCustomColor(hex) {
+    badgeEditColor = hex;
+    renderBadgePalette();
+    updateBadgePreview();
+}
+
+function updateBadgePreview() {
+    const preview = document.getElementById("badge-preview");
+    if (!preview) return;
+    const label = document.getElementById("badge-label-input").value.trim();
+    preview.textContent = label || "문구 없음";
+    preview.style.cssText = buildAdminBadgeStyle(badgeEditColor);
+}
+
+function saveRoomBadge() {
+    if (!badgeEditBuilding) return;
+    const label = document.getElementById("badge-label-input").value.trim();
+    if (!label) {
+        showAdminToast("표시 문구를 입력해주세요.", "error");
+        return;
+    }
+
+    const rKey = `${badgeEditBuilding}_${badgeEditRoomNumber}`;
+    const settings = getRoomSettings();
+    if (!settings[rKey]) settings[rKey] = { isAvailable: true, blockedSlots: [] };
+    settings[rKey].badgeLabel = label;
+    if (badgeEditColor) settings[rKey].badgeColor = badgeEditColor;
+    else delete settings[rKey].badgeColor;
+
+    if (!saveRoomSettings(settings)) return;
+
+    addAuditLog("ROOM_BADGE_UPDATE", rKey, `구분 표시 수정: ${label}${badgeEditColor ? ` (${badgeEditColor})` : ""}`);
+    closeRoomBadgeModal();
+    renderRoomsManager();
+    showAdminToast("연습실 구분 표시가 저장되었습니다. 학생 화면에 즉시 반영됩니다.", "success");
+}
+
+function resetRoomBadge() {
+    if (!badgeEditBuilding) return;
+    const rKey = `${badgeEditBuilding}_${badgeEditRoomNumber}`;
+    const settings = getRoomSettings();
+    if (settings[rKey]) {
+        delete settings[rKey].badgeLabel;
+        delete settings[rKey].badgeColor;
+        if (!saveRoomSettings(settings)) return;
+    }
+    addAuditLog("ROOM_BADGE_RESET", rKey, "구분 표시 기본값 복원");
+    closeRoomBadgeModal();
+    renderRoomsManager();
+    showAdminToast("구분 표시가 기본값으로 복원되었습니다.", "success");
 }
 
 // 새 연습실 등록 모달

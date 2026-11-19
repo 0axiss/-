@@ -2523,7 +2523,28 @@ function deactivateAllFloorProhibitions() {
 // =================================================================
 // 16. 앱 라이프사이클 부트스트랩 (App Bootstrapping & Init)
 // =================================================================
+function cleanupAdminSampleReservations() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) return;
+        const cleaned = list.filter(r => !r.id || !r.id.startsWith("CSU-1001-"));
+        if (cleaned.length !== list.length) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+            if (typeof pushReservationsToCloud === "function") {
+                pushReservationsToCloud(cleaned);
+            }
+        }
+    } catch (e) {
+        console.warn("샘플 예약 정리 실패:", e);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+    // 0. 기존 샘플 더미 예약 자동 정리
+    cleanupAdminSampleReservations();
+
     // 1. 관리자 마스터 계정 초기화 확인
     await initAdminAccounts();
 

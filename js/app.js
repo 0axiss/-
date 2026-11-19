@@ -3,12 +3,9 @@
  */
 
 function initApp() {
-    // 최초 실행 시 기본 샘플 데이터 구성
-    const existing = getAllReservations();
-    if (!existing || existing.length === 0) {
-        if (typeof generateSampleData === "function") {
-            generateSampleData();
-        }
+    // 기존에 생성되어 남아있던 샘플 더미 예약 자동 정리 (더 이상 자체 샘플을 생성하지 않음)
+    if (typeof cleanupSampleReservations === "function") {
+        cleanupSampleReservations();
     }
 
     // 게시판 기본 공지 확인

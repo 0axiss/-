@@ -278,79 +278,29 @@ function checkFloorProhibitionConflict(dateKey, building, floor, startMin, endMi
     return { hasConflict: false };
 }
 
-function generateSampleData() {
-    const sampleList = [
-        {
-            id: "CSU-1001-01",
-            building: "신관",
-            floor: "B1",
-            room: "B12",
-            roomType: "교음(오르간)",
-            date: formatDateKey(new Date()),
-            startTime: "10:00",
-            endTime: "11:30",
-            startMin: 600,
-            endMin: 690,
-            name: "이찬양",
-            studentId: "20241011",
-            phone: "010-3333-5555",
-            status: "confirmed",
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: "CSU-1001-02",
-            building: "신관",
-            floor: "5F",
-            room: "507",
-            roomType: "교음",
-            date: formatDateKey(new Date()),
-            startTime: "14:00",
-            endTime: "16:00",
-            startMin: 840,
-            endMin: 960,
-            name: "김하늘",
-            studentId: "20231022",
-            phone: "010-4444-6666",
-            status: "confirmed",
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: "CSU-1001-03",
-            building: "신관",
-            floor: "6F",
-            room: "622",
-            roomType: "교음(그랜드)",
-            date: formatDateKey(new Date()),
-            startTime: "16:30",
-            endTime: "18:00",
-            startMin: 990,
-            endMin: 1080,
-            name: "박은혜",
-            studentId: "20221033",
-            phone: "010-7777-8888",
-            status: "confirmed",
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: "CSU-1001-04",
-            building: "종합관",
-            floor: "2F",
-            room: "3",
-            roomType: "그랜드",
-            date: formatDateKey(new Date()),
-            startTime: "13:00",
-            endTime: "15:00",
-            startMin: 780,
-            endMin: 900,
-            name: "최다윗",
-            studentId: "20241044",
-            phone: "010-9999-1111",
-            status: "confirmed",
-            createdAt: new Date().toISOString()
+// 기존에 생성되어 남아있던 시스템 샘플 더미 예약 자동 정리 (더 이상 자체 생성하지 않음)
+function cleanupSampleReservations() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) return;
+        
+        // 샘플 데이터 ID (CSU-1001-xx) 또는 더미 데이터 필터링
+        const cleaned = list.filter(r => !r.id || !r.id.startsWith("CSU-1001-"));
+        if (cleaned.length !== list.length) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+            if (typeof pushReservationsToCloud === "function") {
+                pushReservationsToCloud(cleaned);
+            }
         }
-    ];
+    } catch (e) {
+        console.warn("샘플 예약 데이터 정리 중 오류:", e);
+    }
+}
 
-    saveAllReservations(sampleList);
-    return sampleList;
+function generateSampleData() {
+    // 자체 샘플 예약 생성 중지 (빈 배열 반환)
+    return [];
 }
 

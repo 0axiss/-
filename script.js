@@ -2234,89 +2234,7 @@ function executeCancellation() {
 // 13. 데이터 백업, 샘플 데이터 생성 및 초기화 (관리 및 테스트)
 // =================================================================
 function generateSampleData() {
-    const sampleList = [
-        {
-            id: "CSU-1001-01",
-            building: "신관",
-            floor: "B1",
-            room: "B12",
-            roomType: "교음(오르간)",
-            date: formatDateKey(new Date()),
-            startTime: "10:00",
-            endTime: "11:30",
-            startMin: 600,
-            endMin: 690,
-            name: "이찬양",
-            studentId: "20241011",
-            phone: "010-3333-5555",
-            status: "confirmed",
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: "CSU-1001-02",
-            building: "신관",
-            floor: "B1",
-            room: "B12",
-            roomType: "교음(오르간)",
-            date: formatDateKey(new Date()),
-            startTime: "14:00",
-            endTime: "16:00",
-            startMin: 840,
-            endMin: 960,
-            name: "박피아노",
-            studentId: "20231045",
-            phone: "010-7777-8888",
-            status: "confirmed",
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: "CSU-1001-03",
-            building: "신관",
-            floor: "6F",
-            room: "612",
-            roomType: "성악학회실",
-            date: formatDateKey(new Date()),
-            startTime: "13:00",
-            endTime: "15:00",
-            startMin: 780,
-            endMin: 900,
-            name: "김성악",
-            studentId: "20241078",
-            phone: "010-1234-5678",
-            status: "confirmed",
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: "CSU-1001-04",
-            building: "종합관",
-            floor: "2F",
-            room: "3",
-            roomType: "그랜드",
-            date: formatDateKey(new Date()),
-            startTime: "09:30",
-            endTime: "11:30",
-            startMin: 570,
-            endMin: 690,
-            name: "정건반",
-            studentId: "20221099",
-            phone: "010-9999-1111",
-            status: "confirmed",
-            createdAt: new Date().toISOString()
-        }
-    ];
-
-    saveAllReservations(sampleList);
-    showToast("테스트용 샘플 예약 데이터 4건이 생성되었습니다.", "success");
-
-    // 화면 갱신
-    if (currentScreen === "time-screen") {
-        renderSlotsGrid();
-        syncDropdownsWithSelection();
-    } else if (currentScreen === "overview-screen") {
-        renderOverviewDashboard();
-    } else if (currentScreen === "my-screen") {
-        searchMyReservations();
-    }
+    return [];
 }
 
 function resetAllReservations() {
@@ -2912,12 +2830,6 @@ function submitInquiryPost() {
 // 16. 초기화 (App Bootstrapping)
 // =================================================================
 document.addEventListener("DOMContentLoaded", () => {
-    // 만약 최초 실행이라 데이터가 없다면 샘플 데이터 4건 자동 구성
-    const existing = getAllReservations();
-    if (!existing || existing.length === 0) {
-        generateSampleData();
-    }
-
     // 게시판 초기 데이터 확인
     initDefaultBoardPosts();
 

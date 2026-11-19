@@ -1297,12 +1297,26 @@ select {
     color: white;
 }
 
-/* Bottom Action Bar */
+/* Bottom Action Bar (스크롤과 무관하게 화면 하단 고정) */
+#time-screen {
+    padding-bottom: 155px; /* 고정 버튼 및 바텀 내비게이션 영역 확보 */
+}
+
 .bottom-action-bar {
-    position: sticky;
-    bottom: 84px;
-    z-index: 40;
-    padding-top: 8px;
+    position: fixed;
+    bottom: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    padding: 10px 18px 12px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+    z-index: 55;
+    box-sizing: border-box;
 }
 
 .btn-primary-reserve {

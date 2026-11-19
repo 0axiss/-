@@ -84,6 +84,12 @@ function updateBottomNav(screenId) {
     } else if (screenId === "board-screen") {
         if (bBoard) bBoard.classList.add("active");
     }
+
+    // 타임테이블 화면(time-screen) 하단 고정 예약 신청 버튼 표시 토글
+    const timeActionBar = document.getElementById("timetable-bottom-action-bar");
+    if (timeActionBar) {
+        timeActionBar.style.display = (screenId === "time-screen") ? "block" : "none";
+    }
 }
 
 function updateHeaderBadge() {

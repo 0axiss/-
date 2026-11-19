@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css?v=20261119_v1">
+    <link rel="stylesheet" href="style.css?v=20261119_v2">
 </head>
 
 <body>
@@ -237,17 +237,6 @@
                         <!-- Hourly timetable blocks dynamically rendered by JS -->
                     </div>
                 </div>
-
-                <!-- Floating Booking Bar -->
-                <div class="bottom-action-bar">
-                    <button class="btn-primary-reserve" id="btn-proceed-reserve" onclick="openReservationModal()">
-                        <span class="btn-text">이 시간으로 예약 신청하기</span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                            <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                    </button>
-                </div>
             </section>
 
 
@@ -443,6 +432,17 @@
             </section>
 
         </div> <!-- end .content-wrapper -->
+
+        <!-- Floating Timetable Booking Bar (Fixed at bottom above nav) -->
+        <div class="bottom-action-bar" id="timetable-bottom-action-bar" style="display:none;">
+            <button class="btn-primary-reserve" id="btn-proceed-reserve" onclick="openReservationModal()">
+                <span class="btn-text">이 시간으로 예약 신청하기</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+        </div>
 
         <!-- Mobile Bottom Navigation Bar -->
         <nav class="bottom-nav">
@@ -742,7 +742,7 @@
     <script src="js/utils.js?v=20261115_v3"></script>
     <script src="js/data.js?v=20261116_v6"></script>
     <script src="js/storage.js?v=20261119_v1"></script>
-    <script src="js/navigation.js?v=20261117_v1"></script>
+    <script src="js/navigation.js?v=20261119_v2"></script>
     <script src="js/timetable.js?v=20261117_v1"></script>
     <script src="js/reservation.js?v=20261116_v6"></script>
     <script src="js/board.js?v=20261117_v1"></script>

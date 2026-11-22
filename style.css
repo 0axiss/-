@@ -2877,6 +2877,41 @@ select {
     flex: 1;
 }
 
+/* 공지게시판 및 문의글 본문 자동 하이퍼링크 스타일 (링크/전화번호) */
+.board-autolink {
+    color: var(--primary, #2563eb);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    word-break: break-all;
+    display: inline;
+    padding: 1px 3px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.board-autolink:hover,
+.board-autolink:focus-visible {
+    color: var(--primary-dark, #1d4ed8);
+    background: rgba(37, 99, 235, 0.1);
+}
+.board-autolink.tel {
+    color: #0284c7; /* 청록빛 블루 */
+}
+.board-autolink.tel:hover,
+.board-autolink.tel:focus-visible {
+    color: #0369a1;
+    background: rgba(2, 132, 199, 0.1);
+}
+.board-autolink.email {
+    color: #7c3aed; /* 보라빛 */
+}
+.board-autolink.email:hover,
+.board-autolink.email:focus-visible {
+    color: #6d28d9;
+    background: rgba(124, 58, 237, 0.1);
+}
+
 .board-detail-footer {
     margin-top: auto;
     padding-top: 14px;

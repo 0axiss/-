@@ -314,7 +314,9 @@ function openBoardDetailModal(post) {
         <span><strong>등록일:</strong> ${dateStr}</span>
     `;
 
-    document.getElementById("post-detail-body").textContent = post.content;
+    document.getElementById("post-detail-body").innerHTML = typeof linkifyText === "function"
+        ? linkifyText(post.content)
+        : escapeHtml(post.content);
 
     const answerBox = document.getElementById("post-answer-box");
     if (post.category === "inquiry") {
@@ -322,7 +324,9 @@ function openBoardDetailModal(post) {
             answerBox.style.display = "block";
             const aDate = post.answer.createdAt ? post.answer.createdAt.slice(0, 10).replace(/-/g, '.') : '';
             document.getElementById("post-answer-date").textContent = `${escapeHtml(post.answer.author || '관리실')} · ${aDate}`;
-            document.getElementById("post-answer-content").textContent = post.answer.content;
+            document.getElementById("post-answer-content").innerHTML = typeof linkifyText === "function"
+                ? linkifyText(post.answer.content)
+                : escapeHtml(post.answer.content);
         } else {
             answerBox.style.display = "block";
             document.getElementById("post-answer-date").textContent = "접수 완료";

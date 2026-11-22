@@ -93,3 +93,58 @@ function maskName(name) {
     return name[0] + "*".repeat(name.length - 2) + name[name.length - 1];
 }
 
+/**
+ * 텍스트 내 인터넷 주소(URL) 및 전화번호, 이메일을 감지하여
+ * 클릭/터치 시 바로 연결되는 안전한 <a> 태그로 자동 변환 (Autolink)
+ */
+function linkifyText(text) {
+    if (!text) return "";
+    let safe = escapeHtml(text);
+
+    const tokens = [];
+    const makeToken = (html) => {
+        const id = `___AUTOLINK_TOKEN_${tokens.length}___`;
+        tokens.push({ id, html });
+        return id;
+    };
+
+    // 1. URL 감지 (http://, https://, www.)
+    const urlRegex = /(https?:\/\/[^\s<"'()]+|www\.[^\s<"'()]+)/gi;
+    safe = safe.replace(urlRegex, (matched) => {
+        let cleanUrl = matched;
+        let suffix = "";
+        const trailingPunct = /[.,;:!?)\]]+$/;
+        const matchPunct = cleanUrl.match(trailingPunct);
+        if (matchPunct) {
+            suffix = matchPunct[0];
+            cleanUrl = cleanUrl.slice(0, -suffix.length);
+        }
+        const href = cleanUrl.toLowerCase().startsWith("http") ? cleanUrl : `https://${cleanUrl}`;
+        const tag = `<a href="${href}" target="_blank" rel="noopener noreferrer" class="board-autolink link" title="새 창으로 링크 열기">${cleanUrl}</a>`;
+        return makeToken(tag) + suffix;
+    });
+
+    // 2. 이메일 감지
+    const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+    safe = safe.replace(emailRegex, (matched) => {
+        const tag = `<a href="mailto:${matched}" class="board-autolink email" title="이메일 보내기">${matched}</a>`;
+        return makeToken(tag);
+    });
+
+    // 3. 한국 전화번호 감지 (010, 02, 031~064, 1588 등)
+    const phoneRegex = /(01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}|02[-\s.]?\d{3,4}[-\s.]?\d{4}|0[3-6][1-5][-\s.]?\d{3,4}[-\s.]?\d{4}|1[5678]\d{2}[-\s.]?\d{4})/g;
+    safe = safe.replace(phoneRegex, (matched) => {
+        const cleanDigits = matched.replace(/[^0-9]/g, "");
+        const tag = `<a href="tel:${cleanDigits}" class="board-autolink tel" title="전화 걸기 (${cleanDigits})">${matched}</a>`;
+        return makeToken(tag);
+    });
+
+    // 4. 모든 토큰을 실제 HTML 태그로 복원
+    tokens.forEach(t => {
+        safe = safe.replace(t.id, t.html);
+    });
+
+    return safe;
+}
+
+

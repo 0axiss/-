@@ -59,7 +59,16 @@ function openReservationModal() {
     }
 
     const modal = document.getElementById("reservation-modal");
-    if (modal) modal.style.display = "flex";
+    if (modal) {
+        modal.style.display = "flex";
+        setTimeout(() => {
+            const firstInput = document.getElementById("input-res-name");
+            if (firstInput) firstInput.focus();
+        }, 100);
+        if (typeof announceA11y === "function") {
+            announceA11y("예약 신청 창이 열렸습니다. 이름, 학번, 연락처, 본인 확인 비밀번호를 입력해주세요.");
+        }
+    }
 }
 
 function closeReservationModal() {
@@ -384,6 +393,10 @@ function openSuccessModal(res) {
     `;
 
     modal.style.display = "flex";
+
+    if (typeof announceA11y === "function") {
+        announceA11y(`예약이 확정되었습니다. ${res.building} ${res.room}호, ${res.date}, ${res.startTime}부터 ${res.endTime}까지 총 ${durStr}.`);
+    }
 }
 
 function closeSuccessModal() {
@@ -609,6 +622,10 @@ function confirmCancelReservation(resId) {
     `;
 
     modal.style.display = "flex";
+
+    if (typeof announceA11y === "function") {
+        announceA11y("예약 취소 확인 창이 열렸습니다. 취소를 원하시면 예약 취소 확정 버튼을 눌러주세요.");
+    }
 }
 
 function closeCancelModal() {

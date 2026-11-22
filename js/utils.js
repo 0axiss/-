@@ -46,10 +46,25 @@ function showToast(msg, type = "normal") {
     toast.textContent = msg;
     toast.className = `app-toast show ${type}`;
 
+    // 스크린 리더(TalkBack/VoiceOver) 실시간 음성 전달
+    announceA11y(msg);
+
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
         toast.className = "app-toast";
     }, 2800);
+}
+
+// 스크린 리더 전용 실시간 음성 안내 낭독 헬퍼
+function announceA11y(msg) {
+    if (!msg) return;
+    const announcer = document.getElementById("a11y-announcer");
+    if (announcer) {
+        announcer.textContent = "";
+        setTimeout(() => {
+            announcer.textContent = msg;
+        }, 50);
+    }
 }
 
 function formatPhoneNumber(input) {

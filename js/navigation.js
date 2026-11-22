@@ -33,6 +33,20 @@ function navTo(screenId, pushHistory = true) {
 
     updateBottomNav(screenId);
 
+    const screenTitles = {
+        "building-screen": "건물 선택 화면",
+        "room-screen": `${selectedBuilding} 연습실 목록 화면`,
+        "time-screen": `${selectedBuilding} ${selectedRoom ? getRoomDisplayName(selectedBuilding, selectedRoom.number, "호") : ""} 예약 타임테이블 화면`,
+        "room-status-screen": "연습실 예약 현황 화면",
+        "overview-screen": "전체 연습실 현황판 화면",
+        "my-screen": "내 예약 조회 및 취소 화면",
+        "board-screen": "연습실 소통 게시판 화면",
+        "floorplan-screen": "연습실 층별 약도 화면"
+    };
+    if (typeof announceA11y === "function" && screenTitles[screenId]) {
+        announceA11y(`${screenTitles[screenId]}으로 이동했습니다.`);
+    }
+
     if (screenId === "overview-screen") {
         renderOverviewDashboard();
     } else if (screenId === "my-screen") {
@@ -144,6 +158,9 @@ function renderFloorTabsAndRooms(activeFloorName = "ALL") {
     const allTab = document.createElement("button");
     allTab.className = `floor-tab-btn ${activeFloorName === "ALL" ? "active" : ""}`;
     allTab.textContent = `전체 (${getTotalRoomsInBuilding(b)}실)`;
+    allTab.setAttribute("role", "tab");
+    allTab.setAttribute("aria-selected", activeFloorName === "ALL" ? "true" : "false");
+    allTab.setAttribute("aria-label", `전체 층 보기, 총 ${getTotalRoomsInBuilding(b)}개 연습실`);
     allTab.onclick = () => renderFloorTabsAndRooms("ALL");
     tabsContainer.appendChild(allTab);
 
@@ -151,6 +168,9 @@ function renderFloorTabsAndRooms(activeFloorName = "ALL") {
         const tab = document.createElement("button");
         tab.className = `floor-tab-btn ${activeFloorName === floor.name ? "active" : ""}`;
         tab.textContent = `${floor.name} (${floor.rooms.length}실)`;
+        tab.setAttribute("role", "tab");
+        tab.setAttribute("aria-selected", activeFloorName === floor.name ? "true" : "false");
+        tab.setAttribute("aria-label", `${floor.name} 보기, 총 ${floor.rooms.length}개 연습실`);
         tab.onclick = () => renderFloorTabsAndRooms(floor.name);
         tabsContainer.appendChild(tab);
     });
@@ -218,9 +238,17 @@ function renderFloorTabsAndRooms(activeFloorName = "ALL") {
 
                 const card = document.createElement("div");
                 card.className = "room-card-item";
+                card.setAttribute("role", "button");
+                card.setAttribute("tabindex", "0");
 
                 card.onclick = () => {
                     selectRoom(floor, room);
+                };
+                card.onkeydown = (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        selectRoom(floor, room);
+                    }
                 };
 
                 const badgeInfo = getRoomBadgeInfo(selectedBuilding, room);
@@ -229,9 +257,13 @@ function renderFloorTabsAndRooms(activeFloorName = "ALL") {
                 else if (room.category === "grand") badgeClass = "grand";
                 else if (room.category === "society") badgeClass = "society";
 
+                const roomDisp = getRoomDisplayName(selectedBuilding, room.number);
+                const a11yStatus = isCurrentlyOccupied ? "현재 사용 중" : "현재 비어 있음";
+                card.setAttribute("aria-label", `${selectedBuilding} ${floor.name} ${roomDisp}, ${badgeInfo.label || '일반 연습실'}, ${a11yStatus}, 오늘 예약 ${todayCount}건. 시간 예약하려면 누르세요.`);
+
                 card.innerHTML = `
                     <div class="rci-top">
-                        <span class="rci-number">${escapeHtml(getRoomDisplayName(selectedBuilding, room.number))}</span>
+                        <span class="rci-number">${escapeHtml(roomDisp)}</span>
                         <span class="rci-status-dot ${isCurrentlyOccupied ? 'occupied' : ''}" title="${isCurrentlyOccupied ? '현재 사용중' : '현재 비어있음'}"></span>
                     </div>
                     ${badgeInfo.label ? `<span class="rci-badge ${badgeInfo.color ? '' : badgeClass}" style="${buildBadgeColorStyle(badgeInfo.color)}">${escapeHtml(badgeInfo.label)}</span>` : '<span class="rci-badge">일반 연습실</span>'}
@@ -287,11 +319,22 @@ function renderFloorTabsAndRooms(activeFloorName = "ALL") {
         unavailableRooms.forEach(({ floor, room, setting }) => {
             const card = document.createElement("div");
             card.className = "room-card-item disabled-room";
+            card.setAttribute("role", "button");
+            card.setAttribute("tabindex", "0");
+            card.setAttribute("aria-disabled", "true");
 
             const reasonText = (setting && setting.reason) ? setting.reason : "시설 점검 중";
+            const roomDisp = getRoomDisplayName(selectedBuilding, room.number);
+            card.setAttribute("aria-label", `${selectedBuilding} ${floor.name} ${roomDisp}, 현재 예약 불가. 사유: ${reasonText}`);
 
             card.onclick = () => {
-                showToast(`현재 ${getRoomDisplayName(selectedBuilding, room.number)} 연습실은 이용이 불가합니다 (${reasonText}).`, "error");
+                showToast(`현재 ${roomDisp} 연습실은 이용이 불가합니다 (${reasonText}).`, "error");
+            };
+            card.onkeydown = (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    showToast(`현재 ${roomDisp} 연습실은 이용이 불가합니다 (${reasonText}).`, "error");
+                }
             };
 
             card.innerHTML = `

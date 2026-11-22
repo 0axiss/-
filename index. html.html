@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>총신대학교 교회음악과 연습실 예약 시스템</title>
     <meta name="description" content="총신대학교 교회음악과 학생들을 위한 온라인 연습실 실시간 예약 및 현황 조회 시스템">
 
@@ -19,6 +19,9 @@
 
 <body>
     <div id="app-container">
+
+        <!-- 스크린 리더(TalkBack/VoiceOver) 전용 실시간 음성 알림 영역 -->
+        <div id="a11y-announcer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
 
         <!-- Global App Header -->
         <header class="app-header">
@@ -74,7 +77,7 @@
 
                 <div class="building-grid">
                     <!-- 신관 카드 -->
-                    <div class="building-card" onclick="selectBuilding('신관')">
+                    <div class="building-card" role="button" tabindex="0" aria-label="신관 선택. 지하 1층, 5층, 6층, 33개 연습실. 선택하려면 이중 탭하세요." onclick="selectBuilding('신관')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectBuilding('신관');}">
                         <div class="bcard-body">
                             <div class="bcard-info">
                                 <h3 class="bcard-title">신관</h3>
@@ -88,7 +91,7 @@
                     </div>
 
                     <!-- 종합관 카드 -->
-                    <div class="building-card" onclick="selectBuilding('종합관')">
+                    <div class="building-card" role="button" tabindex="0" aria-label="종합관 선택. 2층, 12개 연습실. 선택하려면 이중 탭하세요." onclick="selectBuilding('종합관')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectBuilding('종합관');}">
                         <div class="bcard-body">
                             <div class="bcard-info">
                                 <h3 class="bcard-title">종합관</h3>
@@ -197,8 +200,8 @@
 
                 <!-- Date Selector Bar -->
                 <div class="date-navigator-card">
-                    <button class="dn-btn" onclick="changeDate(-1)" title="이전 날짜">‹</button>
-                    <div class="dn-center" onclick="triggerDatePicker()">
+                    <button class="dn-btn" onclick="changeDate(-1)" title="이전 날짜" aria-label="이전 날짜로 이동">‹</button>
+                    <div class="dn-center" onclick="triggerDatePicker()" role="button" tabindex="0" aria-label="현재 날짜 선택 및 변경">
                         <div class="dn-date-row">
                             <strong id="dn-display-date">2026.10.15</strong>
                             <span class="dn-day-badge" id="dn-display-day">목요일</span>
@@ -208,7 +211,7 @@
                         <input type="date" id="native-date-input"
                             style="position:absolute; opacity:0; pointer-events:none; width:1px; height:1px;">
                     </div>
-                    <button class="dn-btn" onclick="changeDate(1)" title="다음 날짜">›</button>
+                    <button class="dn-btn" onclick="changeDate(1)" title="다음 날짜" aria-label="다음 날짜로 이동">›</button>
                 </div>
 
                 <!-- Dropdown / Manual Time Selector (Time Setting Card) -->
@@ -472,15 +475,15 @@
         </div>
 
         <!-- Mobile Bottom Navigation Bar -->
-        <nav class="bottom-nav">
-            <button class="bnav-item active" id="bnav-reserve" onclick="navTo('building-screen')">
+        <nav class="bottom-nav" aria-label="하단 주요 메뉴">
+            <button class="bnav-item active" id="bnav-reserve" onclick="navTo('building-screen')" aria-label="연습실 예약 화면으로 이동">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
                 <span>연습실 예약</span>
             </button>
-            <button class="bnav-item" id="bnav-overview" onclick="navTo('overview-screen')">
+            <button class="bnav-item" id="bnav-overview" onclick="navTo('overview-screen')" aria-label="전체 현황 화면으로 이동">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="7" height="7"></rect>
                     <rect x="14" y="3" width="7" height="7"></rect>
@@ -489,7 +492,7 @@
                 </svg>
                 <span>전체 현황</span>
             </button>
-            <button class="bnav-item" id="bnav-my" onclick="navTo('my-screen')">
+            <button class="bnav-item" id="bnav-my" onclick="navTo('my-screen')" aria-label="내 예약 및 취소 화면으로 이동">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
@@ -499,7 +502,7 @@
                 </svg>
                 <span>내 예약/취소</span>
             </button>
-            <button class="bnav-item" id="bnav-board" onclick="navTo('board-screen')">
+            <button class="bnav-item" id="bnav-board" onclick="navTo('board-screen')" aria-label="게시판 화면으로 이동">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
@@ -509,15 +512,15 @@
 
 
         <!-- MODAL 1: 예약 정보 입력 모달 (Reservation Input Modal) -->
-        <div id="reservation-modal" class="app-modal" style="display:none;">
+        <div id="reservation-modal" class="app-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-res-title">
             <div class="modal-backdrop" onclick="closeReservationModal()"></div>
             <div class="modal-dialog">
                 <div class="modal-header">
                     <div class="modal-header-text">
                         <span class="m-sub">총신대학교 교회음악과</span>
-                        <h3 class="m-title">연습실 예약 신청</h3>
+                        <h3 class="m-title" id="modal-res-title">연습실 예약 신청</h3>
                     </div>
-                    <button class="modal-close-btn" onclick="closeReservationModal()">✕</button>
+                    <button class="modal-close-btn" onclick="closeReservationModal()" aria-label="예약 신청 창 닫기">✕</button>
                 </div>
 
                 <div class="modal-body">
@@ -586,7 +589,7 @@
 
 
         <!-- MODAL 2: 예약 완료 확인증 팝업 (Confirmation Success Modal) -->
-        <div id="success-modal" class="app-modal" style="display:none;">
+        <div id="success-modal" class="app-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-success-title">
             <div class="modal-backdrop" onclick="closeSuccessModal()"></div>
             <div class="modal-dialog success-dialog">
                 <div class="success-icon-wrap">
@@ -594,7 +597,7 @@
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
-                <h3 class="success-title">예약이 확정되었습니다!</h3>
+                <h3 class="success-title" id="modal-success-title">예약이 확정되었습니다!</h3>
                 <p class="success-subtitle">별도의 승인 없이 즉시 예약 완료되었습니다.</p>
 
                 <div class="pass-card" id="success-pass-card">
@@ -611,7 +614,7 @@
 
 
         <!-- MODAL 3: 예약 취소 확인 모달 (Cancel Confirm Modal) -->
-        <div id="cancel-modal" class="app-modal" style="display:none;">
+        <div id="cancel-modal" class="app-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-cancel-title">
             <div class="modal-backdrop" onclick="closeCancelModal()"></div>
             <div class="modal-dialog cancel-dialog">
                 <div class="cancel-icon-wrap">
@@ -620,7 +623,7 @@
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </div>
-                <h3 class="cancel-title">예약을 취소하시겠습니까?</h3>
+                <h3 class="cancel-title" id="modal-cancel-title">예약을 취소하시겠습니까?</h3>
                 <p class="cancel-desc">취소된 예약 시간은 즉시 다시 예약 가능한 상태로 복구되어 다른 학생이 이용할 수 있게 됩니다.</p>
 
                 <div class="cancel-target-box" id="cancel-target-info">
@@ -637,7 +640,7 @@
 
 
         <!-- MODAL 4: 게시글 상세 열람 모달 -->
-        <div id="board-detail-modal" class="app-modal" style="display:none;">
+        <div id="board-detail-modal" class="app-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="post-detail-title">
             <div class="modal-backdrop" onclick="closeBoardDetailModal()"></div>
             <div class="modal-dialog board-detail-dialog">
                 <div class="modal-header">
@@ -645,7 +648,7 @@
                         <span class="modal-subtitle" id="post-detail-category">공지사항</span>
                         <h3 class="modal-title" id="post-detail-title">공지 제목</h3>
                     </div>
-                    <button class="modal-close-btn" onclick="closeBoardDetailModal()">✕</button>
+                    <button class="modal-close-btn" onclick="closeBoardDetailModal()" aria-label="게시글 상세 창 닫기">✕</button>
                 </div>
                 <div class="modal-body" style="padding: 16px 20px 24px;">
                     <div class="post-detail-meta" id="post-detail-meta">
@@ -673,15 +676,15 @@
 
 
         <!-- MODAL 5: 실명 문의글 작성 모달 -->
-        <div id="inquiry-modal" class="app-modal" style="display:none;">
+        <div id="inquiry-modal" class="app-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-inquiry-title">
             <div class="modal-backdrop" onclick="closeInquiryModal()"></div>
             <div class="modal-dialog inquiry-write-dialog">
                 <div class="modal-header">
                     <div class="modal-header-text">
                         <span class="m-sub">연습실 문의게시판</span>
-                        <h3 class="m-title">문의글 작성</h3>
+                        <h3 class="m-title" id="modal-inquiry-title">문의글 작성</h3>
                     </div>
-                    <button class="modal-close-btn" onclick="closeInquiryModal()" aria-label="닫기">✕</button>
+                    <button class="modal-close-btn" onclick="closeInquiryModal()" aria-label="문의 작성 창 닫기">✕</button>
                 </div>
                 <div class="modal-body inquiry-modal-body">
                     <!-- 공개 범위 선택 (간결한 2분할 버튼) -->
@@ -739,10 +742,10 @@
 
 
         <!-- MODAL 6: 관계자 공개글 본인 확인 모달 -->
-        <div id="board-auth-modal" class="app-modal" style="display:none;">
+        <div id="board-auth-modal" class="app-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-auth-title">
             <div class="modal-backdrop" onclick="closeBoardAuthModal()"></div>
             <div class="modal-dialog auth-dialog">
-                <h3 class="auth-title">관계자 공개 문의글 열람</h3>
+                <h3 class="auth-title" id="modal-auth-title">관계자 공개 문의글 열람</h3>
                 <p class="auth-desc"><strong>관계자 공개</strong> 글입니다.<br>작성 시 입력한 <strong>학번</strong>을 입력해주세요.</p>
                 <div class="form-group" style="margin-top:16px;">
                     <input type="text" id="input-auth-sid" class="form-input" placeholder="학번 입력 (예: 20241234)" style="text-align:center;">
@@ -766,12 +769,12 @@
     <script src="firebase-sync.js?v=20261122_v2"></script>
 
     <!-- Modularized System Engines -->
-    <script src="js/utils.js?v=20261115_v3"></script>
+    <script src="js/utils.js?v=20261122_a11y"></script>
     <script src="js/data.js?v=20261116_v6"></script>
     <script src="js/storage.js?v=20261122_v2"></script>
-    <script src="js/navigation.js?v=20261122_v3"></script>
-    <script src="js/timetable.js?v=20261122_v1"></script>
-    <script src="js/reservation.js?v=20261122_v1"></script>
+    <script src="js/navigation.js?v=20261122_a11y"></script>
+    <script src="js/timetable.js?v=20261122_a11y"></script>
+    <script src="js/reservation.js?v=20261122_a11y"></script>
     <script src="js/board.js?v=20261117_v1"></script>
     <script src="js/floorplan.js?v=20261122_v1"></script>
     <script src="js/app.js?v=20261119_v1"></script>

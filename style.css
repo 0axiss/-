@@ -99,6 +99,24 @@ select {
     outline: none;
 }
 
+/* Screen Reader Only (시각장애인 스크린 리더 전용 음성 텍스트) */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+:focus-visible {
+    outline: 2.5px solid var(--primary-light);
+    outline-offset: 2px;
+}
+
 /* App Main Container (Max 500px mobile wrap on desktop) */
 #app-container {
     width: 100%;

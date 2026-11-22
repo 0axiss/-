@@ -155,6 +155,13 @@ function changeDate(deltaDays) {
     selectedEndSlotIdx = null;
     renderSlotsGrid(true);
     syncDropdownsWithSelection();
+
+    if (typeof announceA11y === "function") {
+        const dateStr = formatDateDisplay(selectedDate);
+        const dayStr = getDayOfWeekName(selectedDate);
+        const openStatus = checkDailyOpenStatus(formatDateKey(selectedDate));
+        announceA11y(`${dateStr} ${dayStr}로 변경되었습니다. ${openStatus.isOpen ? '예약 가능한 날짜입니다.' : openStatus.message}`);
+    }
 }
 
 function triggerDatePicker() {
@@ -170,6 +177,13 @@ function triggerDatePicker() {
             selectedEndSlotIdx = null;
             renderSlotsGrid(true);
             syncDropdownsWithSelection();
+
+            if (typeof announceA11y === "function") {
+                const dateStr = formatDateDisplay(selectedDate);
+                const dayStr = getDayOfWeekName(selectedDate);
+                const openStatus = checkDailyOpenStatus(formatDateKey(selectedDate));
+                announceA11y(`${dateStr} ${dayStr}로 변경되었습니다. ${openStatus.isOpen ? '예약 가능한 날짜입니다.' : openStatus.message}`);
+            }
         }
     };
 
@@ -283,6 +297,13 @@ function renderSlotsGrid(autoScroll = false) {
             if (isPastSlot) cardClasses.push('past-time-slot');
             card.className = cardClasses.join(' ');
 
+            card.setAttribute("role", "checkbox");
+            card.setAttribute("tabindex", isReserved ? "-1" : "0");
+            card.setAttribute("aria-checked", isSelected ? "true" : "false");
+            if (isReserved) {
+                card.setAttribute("aria-disabled", "true");
+            }
+
             const policies = getBookingPolicies();
             const maxSlots = Math.round((policies.maxDurationHours || 2) * 2);
 
@@ -290,12 +311,14 @@ function renderSlotsGrid(autoScroll = false) {
             let subText = "터치하여 시간 선택";
             let dotColor = "";
             let badgeStyle = "";
+            let a11yDesc = "";
 
             if (blockedSlotInfo) {
                 badgeText = "점검 차단";
                 subText = `🔒 시설 점검 (${escapeHtml(blockedSlotInfo.reason || '이용 제한')})`;
                 dotColor = "#f59e0b";
                 badgeStyle = "background:#fef3c7; color:#92400e; border:1px solid #fde68a;";
+                a11yDesc = `점검 차단, 사유: ${blockedSlotInfo.reason || '이용 제한'}. 예약 불가`;
             } else if (floorSlotInfo) {
                 badgeText = "🚫 이용 제한";
                 const dayNames = ["일","월","화","수","목","금","토"];
@@ -303,32 +326,42 @@ function renderSlotsGrid(autoScroll = false) {
                 subText = `🔒 ${escapeHtml(floorSlotInfo.title || '정기 이용 제한')} (매주 ${dayNames[floorSlotInfo.dayOfWeek]} · ${targetFloorLabel})`;
                 dotColor = "#dc2626";
                 badgeStyle = "background:#fee2e2; color:#991b1b; border:1px solid #fecaca;";
+                a11yDesc = `정기 이용 제한, ${floorSlotInfo.title || '정기 이용 제한'}. 예약 불가`;
             } else if (fixedSlotInfo) {
                 badgeText = "📌 고정 예약";
                 const dayNames = ["일","월","화","수","목","금","토"];
                 subText = `🔒 ${escapeHtml(fixedSlotInfo.title || '레슨')} (매주 ${dayNames[fixedSlotInfo.dayOfWeek]}요일)`;
                 dotColor = "#7c3aed";
                 badgeStyle = "background:#ede9fe; color:#5b21b6; border:1px solid #ddd6fe;";
+                a11yDesc = `고정 예약, ${fixedSlotInfo.title || '레슨'}. 예약 불가`;
             } else if (bookedRes) {
                 badgeText = "예약 마감";
                 subText = `🔒 예약 완료 (${maskName(bookedRes.name)} 님)`;
                 dotColor = "#ef4444";
                 badgeStyle = "background:#fee2e2; color:#991b1b; border:1px solid #fecaca;";
+                a11yDesc = `이미 다른 학생이 예약하여 마감됨. 예약 불가`;
             } else if (!openStatus.isOpen) {
                 badgeText = "🔒";
                 subText = "";
                 dotColor = "#9ca3af";
                 badgeStyle = "background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0;";
+                a11yDesc = `${openStatus.message}. 예약 불가`;
             } else if (isPastSlot) {
                 badgeText = "시간 경과";
                 subText = "⏱️ 이용 시간이 지난 슬롯입니다";
                 dotColor = "#9ca3af";
                 badgeStyle = "background:#f3f4f6; color:#6b7280; border:1px solid #e5e7eb;";
+                a11yDesc = `이용 시간이 이미 지남. 예약 불가`;
             } else if (isSelected) {
                 const totalText = `${currentSelectedCount * 30}분`;
                 badgeText = (isEnd && currentSelectedCount > 1) ? `✔ ${totalText}` : `✔ 선택됨`;
                 subText = "터치하여 선택 해제 가능";
+                a11yDesc = `선택됨. 해제하려면 누르세요.`;
+            } else {
+                a11yDesc = `예약 가능. 선택하려면 누르세요.`;
             }
+
+            card.setAttribute("aria-label", `${slot.startStr}부터 ${slot.endStr}까지, ${a11yDesc}`);
 
             card.innerHTML = `
                 <div class="tt-slot-left">
@@ -343,6 +376,12 @@ function renderSlotsGrid(autoScroll = false) {
 
             if (openStatus.isOpen && !isReserved && !isPastSlot) {
                 card.onclick = () => onSlotClick(slot.index);
+                card.onkeydown = (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onSlotClick(slot.index);
+                    }
+                };
                 // 첫 번째 예약 가능 슬롯에 마킹 (자동 스크롤 대상)
                 if (!firstAvailableCardRef) {
                     firstAvailableCardRef = card;
@@ -350,19 +389,25 @@ function renderSlotsGrid(autoScroll = false) {
                 }
             } else if (!openStatus.isOpen) {
                 card.onclick = () => showToast(openStatus.message, "error");
+                card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showToast(openStatus.message, "error"); } };
             } else if (blockedSlotInfo) {
                 card.onclick = () => showToast(`해당 시간은 시설 점검 중입니다. (${escapeHtml(blockedSlotInfo.reason || '이용 제한')})`, "error");
+                card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showToast(`해당 시간은 시설 점검 중입니다. (${escapeHtml(blockedSlotInfo.reason || '이용 제한')})`, "error"); } };
             } else if (floorSlotInfo) {
                 const dayNames = ["일","월","화","수","목","금","토"];
                 const targetFloorLabel = floorSlotInfo.floor === "ALL" ? "건물 전 층" : `${floorSlotInfo.floorTitle || floorSlotInfo.floor} 전체`;
                 card.onclick = () => showToast(`해당 시간은 [${selectedBuilding} ${targetFloorLabel}] 전체 이용 금지 시간대(${escapeHtml(floorSlotInfo.title || '정기 이용 제한')})로 매주 ${dayNames[floorSlotInfo.dayOfWeek]}요일에 지정되어 있습니다.`, "error");
+                card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showToast(`해당 시간은 [${selectedBuilding} ${targetFloorLabel}] 전체 이용 금지 시간대(${escapeHtml(floorSlotInfo.title || '정기 이용 제한')})로 매주 ${dayNames[floorSlotInfo.dayOfWeek]}요일에 지정되어 있습니다.`, "error"); } };
             } else if (fixedSlotInfo) {
                 const dayNames = ["일","월","화","수","목","금","토"];
                 card.onclick = () => showToast(`해당 시간은 고정 예약(${escapeHtml(fixedSlotInfo.title || '레슨')}) 시간대로 매주 ${dayNames[fixedSlotInfo.dayOfWeek]}요일에 지정되어 있습니다.`, "error");
+                card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showToast(`해당 시간은 고정 예약(${escapeHtml(fixedSlotInfo.title || '레슨')}) 시간대로 매주 ${dayNames[fixedSlotInfo.dayOfWeek]}요일에 지정되어 있습니다.`, "error"); } };
             } else if (bookedRes) {
                 card.onclick = () => showToast(`이미 다른 학생(${maskName(bookedRes.name)} 님)이 예약한 시간대입니다.`, "error");
+                card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showToast(`이미 다른 학생(${maskName(bookedRes.name)} 님)이 예약한 시간대입니다.`, "error"); } };
             } else if (isPastSlot) {
                 card.onclick = () => showToast("이미 이용 시간이 지난 시간대는 예약할 수 없습니다.", "error");
+                card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showToast("이미 이용 시간이 지난 시간대는 예약할 수 없습니다.", "error"); } };
             }
 
             slotsGroup.appendChild(card);
@@ -549,6 +594,20 @@ function onSlotClick(slotIdx) {
 
     renderSlotsGrid(false);
     syncDropdownsWithSelection();
+
+    if (typeof announceA11y === "function") {
+        if (selectedStartSlotIdx !== null && selectedEndSlotIdx !== null) {
+            const startSlot = TIME_SLOTS[selectedStartSlotIdx];
+            const endSlot = TIME_SLOTS[selectedEndSlotIdx];
+            const durationMins = endSlot.endMinutes - startSlot.startMinutes;
+            const h = Math.floor(durationMins / 60);
+            const m = durationMins % 60;
+            const durText = `${h > 0 ? h + '시간 ' : ''}${m > 0 ? m + '분' : ''}`;
+            announceA11y(`${startSlot.startStr}부터 ${endSlot.endStr}까지 총 ${durText}이 선택되었습니다. 화면 하단의 예약 신청하기 버튼을 눌러주세요.`);
+        } else {
+            announceA11y("시간 선택이 모두 해제되었습니다.");
+        }
+    }
 }
 
 function syncDropdownsWithSelection() {
@@ -714,6 +773,20 @@ function onStartTimeChange() {
     updateEndSelectOptions();
     renderSlotsGrid(false);
     syncDropdownsWithSelection();
+
+    if (typeof announceA11y === "function") {
+        if (selectedStartSlotIdx !== null && selectedEndSlotIdx !== null) {
+            const startSlot = TIME_SLOTS[selectedStartSlotIdx];
+            const endSlot = TIME_SLOTS[selectedEndSlotIdx];
+            const durationMins = endSlot.endMinutes - startSlot.startMinutes;
+            const h = Math.floor(durationMins / 60);
+            const m = durationMins % 60;
+            const durText = `${h > 0 ? h + '시간 ' : ''}${m > 0 ? m + '분' : ''}`;
+            announceA11y(`${startSlot.startStr}부터 ${endSlot.endStr}까지 총 ${durText}이 선택되었습니다. 화면 하단의 예약 신청하기 버튼을 눌러주세요.`);
+        } else {
+            announceA11y("시간 선택이 모두 해제되었습니다.");
+        }
+    }
 }
 
 function onEndTimeChange() {
@@ -724,5 +797,19 @@ function onEndTimeChange() {
     }
     renderSlotsGrid(false);
     syncDropdownsWithSelection();
+
+    if (typeof announceA11y === "function") {
+        if (selectedStartSlotIdx !== null && selectedEndSlotIdx !== null) {
+            const startSlot = TIME_SLOTS[selectedStartSlotIdx];
+            const endSlot = TIME_SLOTS[selectedEndSlotIdx];
+            const durationMins = endSlot.endMinutes - startSlot.startMinutes;
+            const h = Math.floor(durationMins / 60);
+            const m = durationMins % 60;
+            const durText = `${h > 0 ? h + '시간 ' : ''}${m > 0 ? m + '분' : ''}`;
+            announceA11y(`${startSlot.startStr}부터 ${endSlot.endStr}까지 총 ${durText}이 선택되었습니다. 화면 하단의 예약 신청하기 버튼을 눌러주세요.`);
+        } else {
+            announceA11y("시간 선택이 모두 해제되었습니다.");
+        }
+    }
 }
 

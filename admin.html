@@ -1140,7 +1140,7 @@
         <div class="modal-backdrop" onclick="closeRoomBadgeModal()"></div>
         <div class="admin-modal-dialog">
             <div class="admin-modal-header">
-                <h3>연습실 구분 표시 수정</h3>
+                <h3>연습실 이름 / 구분 표시 수정</h3>
                 <button class="btn-modal-close" onclick="closeRoomBadgeModal()">✕</button>
             </div>
             <form onsubmit="event.preventDefault(); saveRoomBadge();">
@@ -1148,6 +1148,12 @@
                     <input type="hidden" id="badge-room-key">
 
                     <div class="badge-edit-target" id="badge-edit-target-name">신관 B12호</div>
+
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label for="badge-name-input">연습실 이름</label>
+                        <input type="text" id="badge-name-input" maxlength="20" placeholder="비우면 기본 이름(호수)으로 표시">
+                        <small style="display:block; margin-top:4px; color:var(--gray-500); font-size:12px;">예약 내역과 설정은 원래 호수 기준으로 유지되며, 화면에 보이는 이름만 바뀝니다.</small>
+                    </div>
 
                     <div class="form-field" style="margin-bottom:14px;">
                         <label>미리보기</label>
@@ -1335,7 +1341,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="firebase-sync.js?v=20261116_v6"></script>
 
-    <script src="admin.js?v=20261119_v2"></script>
+    <script src="admin.js?v=20261122_v1"></script>
 </body>
 
 </html>

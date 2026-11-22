@@ -37,6 +37,16 @@ function getRoomSettings() {
 }
 
 /**
+ * 관리자가 지정한 연습실 표시 이름 조회 (없으면 "번호+suffix")
+ * 예약 데이터/설정 키는 원래 호수(number)를 그대로 쓰므로 이름을 바꿔도 기존 예약은 유지됩니다.
+ */
+function getRoomDisplayName(building, number, suffix = "호") {
+    const s = getRoomSettings()[`${building}_${number}`] || {};
+    const custom = (s.displayName && String(s.displayName).trim()) ? String(s.displayName).trim() : "";
+    return custom || `${number}${suffix}`;
+}
+
+/**
  * 연습실 번호 아래 표시되는 구분 배지(오르간/그랜드 등)의 관리자 지정 문구/색상 조회
  * @returns {{ label: string, color: string|null }} color 가 null 이면 기본 스타일 사용
  */

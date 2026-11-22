@@ -1216,7 +1216,7 @@ function renderRoomsManager() {
             card.innerHTML = `
                 <div class="rmc-top">
                     <div class="rmc-title-area">
-                        <h4>${room.number}호 연습실</h4>
+                        <h4>${escapeHtml((settings.displayName && settings.displayName.trim()) || (room.number + '호 연습실'))}</h4>
                         <span>${b.name} ${floor.name} (${floor.title})</span>
                     </div>
                     <label class="toggle-switch" title="연습실 전체 개방 여부 토글">
@@ -1239,7 +1239,7 @@ function renderRoomsManager() {
                 </div>
                 <div class="rmc-footer">
                     <button class="btn-action edit" onclick="openBlockRoomModal('${rKey}', '${b.name} ${room.number}호')">점검/시간 차단</button>
-                    <button class="btn-action detail" onclick="openRoomBadgeModal('${b.name}', '${room.number}')">구분 표시 수정</button>
+                    <button class="btn-action detail" onclick="openRoomBadgeModal('${b.name}', '${room.number}')">이름/구분 수정</button>
                     ${activeBlocks.length > 0 ? `<button class="btn-action cancel" onclick="clearRoomBlocks('${rKey}')">차단 해제</button>` : ''}
                 </div>
             `;
@@ -1465,6 +1465,7 @@ function openRoomBadgeModal(buildingName, roomNumber) {
 
     document.getElementById("badge-room-key").value = `${buildingName}_${roomNumber}`;
     document.getElementById("badge-edit-target-name").textContent = `${buildingName} ${roomNumber}호`;
+    document.getElementById("badge-name-input").value = (settings.displayName && settings.displayName.trim()) || "";
     document.getElementById("badge-label-input").value = (settings.badgeLabel && settings.badgeLabel.trim()) || room.type || "";
     document.getElementById("badge-color-input").value = badgeEditColor || "#1e3a8a";
 
@@ -1534,12 +1535,15 @@ function saveRoomBadge() {
     const settings = getRoomSettings();
     if (!settings[rKey]) settings[rKey] = { isAvailable: true, blockedSlots: [] };
     settings[rKey].badgeLabel = label;
+    const displayName = document.getElementById("badge-name-input").value.trim();
+    if (displayName) settings[rKey].displayName = displayName;
+    else delete settings[rKey].displayName;
     if (badgeEditColor) settings[rKey].badgeColor = badgeEditColor;
     else delete settings[rKey].badgeColor;
 
     if (!saveRoomSettings(settings)) return;
 
-    addAuditLog("ROOM_BADGE_UPDATE", rKey, `구분 표시 수정: ${label}${badgeEditColor ? ` (${badgeEditColor})` : ""}`);
+    addAuditLog("ROOM_BADGE_UPDATE", rKey, `구분/이름 수정: ${displayName ? `이름 ${displayName}, ` : ""}${label}${badgeEditColor ? ` (${badgeEditColor})` : ""}`);
     closeRoomBadgeModal();
     renderRoomsManager();
     showAdminToast("연습실 구분 표시가 저장되었습니다. 학생 화면에 즉시 반영됩니다.", "success");
@@ -1552,6 +1556,7 @@ function resetRoomBadge() {
     if (settings[rKey]) {
         delete settings[rKey].badgeLabel;
         delete settings[rKey].badgeColor;
+        delete settings[rKey].displayName;
         if (!saveRoomSettings(settings)) return;
     }
     addAuditLog("ROOM_BADGE_RESET", rKey, "구분 표시 기본값 복원");

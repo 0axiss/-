@@ -229,7 +229,7 @@ function renderFloorTabsAndRooms(activeFloorName = "ALL") {
 
                 card.innerHTML = `
                     <div class="rci-top">
-                        <span class="rci-number">${room.number}호</span>
+                        <span class="rci-number">${escapeHtml(getRoomDisplayName(selectedBuilding, room.number))}</span>
                         <span class="rci-status-dot ${isCurrentlyOccupied ? 'occupied' : ''}" title="${isCurrentlyOccupied ? '현재 사용중' : '현재 비어있음'}"></span>
                     </div>
                     ${badgeInfo.label ? `<span class="rci-badge ${badgeInfo.color ? '' : badgeClass}" style="${buildBadgeColorStyle(badgeInfo.color)}">${escapeHtml(badgeInfo.label)}</span>` : '<span class="rci-badge">일반 연습실</span>'}
@@ -289,13 +289,13 @@ function renderFloorTabsAndRooms(activeFloorName = "ALL") {
             const reasonText = (setting && setting.reason) ? setting.reason : "시설 점검 중";
 
             card.onclick = () => {
-                showToast(`현재 ${room.number}호 연습실은 이용이 불가합니다 (${reasonText}).`, "error");
+                showToast(`현재 ${getRoomDisplayName(selectedBuilding, room.number)} 연습실은 이용이 불가합니다 (${reasonText}).`, "error");
             };
 
             card.innerHTML = `
                 <div class="rci-top">
                     <div style="display:flex; align-items:baseline; gap:6px;">
-                        <span class="rci-number" style="color:var(--gray-500);">${room.number}호</span>
+                        <span class="rci-number" style="color:var(--gray-500);">${escapeHtml(getRoomDisplayName(selectedBuilding, room.number))}</span>
                         <span style="font-size:11px; font-weight:700; color:var(--gray-400);">${floor.name}</span>
                     </div>
                     <span class="rci-status-dot" style="background:#94a3b8;" title="예약 불가"></span>
@@ -345,7 +345,7 @@ function openRoomStatusScreen() {
     if (!selectedRoom || !selectedFloor) return;
 
     statusDate = new Date(selectedDate);
-    document.getElementById("status-nav-sub").textContent = `${selectedBuilding} · ${selectedRoom.number}호 (${selectedRoom.type || '연습실'})`;
+    document.getElementById("status-nav-sub").textContent = `${selectedBuilding} · ${getRoomDisplayName(selectedBuilding, selectedRoom.number)} (${selectedRoom.type || '연습실'})`;
 
     updateStatusScreenDate();
     navTo("room-status-screen");
@@ -642,7 +642,7 @@ function renderOverviewDashboard() {
 
             card.innerHTML = `
                 <div class="orc-info">
-                    <span class="orc-room-num">${room.number}호</span>
+                    <span class="orc-room-num">${escapeHtml(getRoomDisplayName(overviewBuilding, room.number))}</span>
                     <span class="orc-room-type">${escapeHtml(getRoomBadgeInfo(overviewBuilding, room).label || '연습실')}</span>
                 </div>
                 <div class="orc-timeline-bar">

@@ -36,7 +36,7 @@ function openReservationModal() {
         return;
     }
 
-    document.getElementById("modal-summary-room").textContent = `${selectedBuilding} ${selectedRoom.number}호 (${selectedRoom.type || '연습실'})`;
+    document.getElementById("modal-summary-room").textContent = `${selectedBuilding} ${getRoomDisplayName(selectedBuilding, selectedRoom.number)} (${selectedRoom.type || '연습실'})`;
     document.getElementById("modal-summary-date").textContent = `${formatDateDisplay(selectedDate)} (${getShortDayName(selectedDate)})`;
 
     const durMins = endMin - startMin;

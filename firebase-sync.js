@@ -88,8 +88,86 @@ function pushFloorProhibitionsToCloud(list) {
     } catch (e) { }
 }
 
+// 관리자가 새로 등록/수정한 연습실 목록 (학생/관리자 화면 공통 반영)
+const SYNC_CUSTOM_ROOMS_KEY = "CHONGSHIN_CUSTOM_ROOMS";
+
+function getCustomRooms() {
+    try {
+        const raw = localStorage.getItem(SYNC_CUSTOM_ROOMS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function pushCustomRoomsToCloud(list) {
+    if (!remoteDb) return;
+    try {
+        remoteDb.ref("customRooms").set(list || []).catch(e => {
+            console.error("클라우드 연습실 목록 저장 실패:", e);
+        });
+    } catch (e) { }
+}
+
+// 저장된 커스텀 연습실을 건물 데이터(학생: BUILDINGS / 관리자: BASE_BUILDINGS)에 병합 (중복 호출 안전)
+function applyCustomRooms() {
+    const targets = [];
+    if (typeof BUILDINGS !== "undefined") targets.push(BUILDINGS);
+    if (typeof BASE_BUILDINGS !== "undefined") targets.push(BASE_BUILDINGS);
+
+    const list = getCustomRooms();
+    targets.forEach(buildings => {
+        list.forEach(item => {
+            const b = buildings[item.building];
+            if (!b || !item.floor || !item.number) return;
+
+            let f = b.floors.find(fl => fl.name === item.floor);
+            const existsElsewhere = b.floors.some(fl => fl !== f && fl.rooms.some(r => String(r.number) === String(item.number)));
+            if (existsElsewhere) return;
+
+            if (!f) {
+                f = { name: item.floor, title: item.floorTitle || `${item.floor}층`, rooms: [] };
+                b.floors.push(f);
+            }
+
+            const existing = f.rooms.find(r => String(r.number) === String(item.number));
+            if (existing) {
+                existing.type = item.type;
+                existing.category = item.category;
+            } else {
+                f.rooms.push({ number: item.number, type: item.type, category: item.category });
+            }
+        });
+    });
+}
+
+document.addEventListener("DOMContentLoaded", applyCustomRooms);
+
 // 3. 실시간 변경 감지 리스너 (Remote ➡️ All Clients)
 if (remoteDb) {
+    // G. 관리자 등록 연습실 목록 실시간 동기화
+    remoteDb.ref("customRooms").on("value", snapshot => {
+        const val = snapshot.val();
+        if (val !== null && val !== undefined) {
+            const list = Array.isArray(val) ? val : Object.values(val);
+            localStorage.setItem(SYNC_CUSTOM_ROOMS_KEY, JSON.stringify(list));
+            applyCustomRooms();
+
+            if (typeof currentScreen !== "undefined") {
+                if (currentScreen === "room-screen" && typeof renderFloorTabsAndRooms === "function") {
+                    renderFloorTabsAndRooms();
+                } else if (currentScreen === "overview-screen" && typeof renderOverviewDashboard === "function") {
+                    renderOverviewDashboard();
+                }
+            }
+            if (typeof renderRoomsManager === "function") renderRoomsManager();
+        } else {
+            const local = getCustomRooms();
+            if (local.length > 0) remoteDb.ref("customRooms").set(local);
+        }
+    });
+
     // A. 예약 내역 실시간 동기화
     remoteDb.ref("reservations").on("value", snapshot => {
         const val = snapshot.val();

@@ -1592,28 +1592,35 @@ function submitRoomForm() {
         return;
     }
 
-    // BASE_BUILDINGS에 추가
-    const b = BASE_BUILDINGS[building];
-    if (b) {
-        let f = b.floors.find(fl => fl.name === floor);
-        if (!f) {
-            f = { name: floor, title: `${floor}층`, rooms: [] };
-            b.floors.push(f);
-        }
-
-        const existing = f.rooms.find(r => r.number === number);
-        if (existing) {
-            existing.type = type;
-            existing.category = category;
-        } else {
-            f.rooms.push({ number, type, category });
-        }
+    if (!checkAdminAuth()) {
+        showAdminToast("관리자 권한이 필요합니다.", "error");
+        return;
     }
 
-    addAuditLog("ROOM_CREATE", `${building} ${number}호`, `새 연습실 등록 (${type})`);
+    const b = BASE_BUILDINGS[building];
+    if (!b) return;
+
+    // 같은 건물의 다른 층에 이미 같은 호수가 있으면 등록 불가
+    const dupElsewhere = b.floors.some(fl => fl.name !== floor && fl.rooms.some(r => String(r.number) === String(number)));
+    if (dupElsewhere) {
+        showAdminToast(`${building}에 이미 ${number}호가 다른 층에 등록되어 있습니다.`, "error");
+        return;
+    }
+
+    const existingFloor = b.floors.find(fl => fl.name === floor);
+    const floorTitle = existingFloor ? existingFloor.title : `${floor}층`;
+
+    // 저장 (학생 화면 포함 전체에 실시간 동기화)
+    const custom = getCustomRooms().filter(c => !(c.building === building && String(c.number) === String(number)));
+    custom.push({ building, floor, floorTitle, number, type, category });
+    localStorage.setItem("CHONGSHIN_CUSTOM_ROOMS", JSON.stringify(custom));
+    pushCustomRoomsToCloud(custom);
+    applyCustomRooms();
+
+    addAuditLog("ROOM_CREATE", `${building} ${number}호`, `연습실 등록/수정 (${type})`);
     closeRoomFormModal();
     renderRoomsManager();
-    showAdminToast("연습실이 성공적으로 등록되었습니다.", "success");
+    showAdminToast("연습실이 저장되었으며 모든 학생 화면에 즉시 반영됩니다.", "success");
 }
 
 // =================================================================

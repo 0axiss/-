@@ -609,6 +609,106 @@ select {
     box-shadow: 0 3px 10px rgba(30, 58, 138, 0.25);
 }
 
+/* -------------------------------------------------------------
+   연습실 약도 (Floor Plan)
+------------------------------------------------------------- */
+.btn-floorplan-open {
+    width: 100%;
+    margin-top: 16px;
+    height: 52px;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+    font-size: 15px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-floorplan-open svg {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-floorplan-open:active {
+    background: var(--primary-bg);
+}
+
+.fp-zoom-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.fp-zoom-btn {
+    min-width: 40px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 10px;
+    background: var(--gray-100);
+    color: var(--gray-800);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.fp-zoom-btn.reset {
+    font-size: 12.5px;
+    margin-left: auto;
+}
+
+.fp-zoom-label {
+    min-width: 48px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-600);
+}
+
+.fp-image-scroll {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: 70vh;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: #fff;
+}
+
+.fp-image-scroll img {
+    display: block;
+    max-width: none;
+    height: auto;
+}
+
+.fp-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--gray-500);
+    text-align: center;
+}
+
+.fp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 56px 16px;
+    border: 1px dashed var(--gray-300);
+    border-radius: var(--radius-md);
+    background: var(--gray-50);
+    color: var(--gray-600);
+    font-size: 13px;
+    text-align: center;
+}
+
+.fp-empty strong {
+    font-size: 15px;
+    color: var(--gray-800);
+}
+
 .floor-group-box {
     margin-bottom: 24px;
 }

@@ -39,6 +39,8 @@ function navTo(screenId, pushHistory = true) {
         if (typeof initMyScreen === "function") initMyScreen();
     } else if (screenId === "board-screen") {
         if (typeof renderBoardScreen === "function") renderBoardScreen();
+    } else if (screenId === "floorplan-screen") {
+        if (typeof renderFloorplanScreen === "function") renderFloorplanScreen();
     } else if (screenId === "room-screen" && !pushHistory) {
         if (typeof renderFloorTabsAndRooms === "function") {
             const titleEl = document.getElementById("room-screen-building-name");
@@ -75,7 +77,7 @@ function updateBottomNav(screenId) {
 
     [bReserve, bOverview, bMy, bBoard].forEach(btn => btn && btn.classList.remove("active"));
 
-    if (screenId === "building-screen" || screenId === "room-screen" || screenId === "time-screen" || screenId === "room-status-screen") {
+    if (screenId === "building-screen" || screenId === "room-screen" || screenId === "time-screen" || screenId === "room-status-screen" || screenId === "floorplan-screen") {
         if (bReserve) bReserve.classList.add("active");
     } else if (screenId === "overview-screen") {
         if (bOverview) bOverview.classList.add("active");

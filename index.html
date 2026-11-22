@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css?v=20261119_v2">
+    <link rel="stylesheet" href="style.css?v=20261122_v1">
 </head>
 
 <body>
@@ -102,7 +102,34 @@
                     </div>
                 </div>
 
+                <button type="button" class="btn-floorplan-open" onclick="openFloorplanScreen()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                        <line x1="8" y1="2" x2="8" y2="18"></line>
+                        <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                    <span>연습실 약도 보기</span>
+                </button>
 
+            </section>
+
+
+            <!-- SCREEN: 연습실 약도 (Floor Plan Screen) -->
+            <section id="floorplan-screen" class="view-screen">
+                <div class="view-top-nav">
+                    <button class="nav-back-btn" onclick="navTo('building-screen')" title="뒤로가기">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="nav-title-group">
+                        <span class="nav-subtitle">층별 안내</span>
+                        <h2 class="nav-main-title">연습실 약도</h2>
+                    </div>
+                </div>
+                <div class="floor-tabs-scroll" id="fp-building-tabs"></div>
+                <div class="floor-tabs-scroll" id="fp-floor-tabs"></div>
+                <div id="fp-view"></div>
             </section>
 
 
@@ -742,10 +769,11 @@
     <script src="js/utils.js?v=20261115_v3"></script>
     <script src="js/data.js?v=20261116_v6"></script>
     <script src="js/storage.js?v=20261122_v2"></script>
-    <script src="js/navigation.js?v=20261122_v2"></script>
+    <script src="js/navigation.js?v=20261122_v3"></script>
     <script src="js/timetable.js?v=20261122_v1"></script>
     <script src="js/reservation.js?v=20261122_v1"></script>
     <script src="js/board.js?v=20261117_v1"></script>
+    <script src="js/floorplan.js?v=20261122_v1"></script>
     <script src="js/app.js?v=20261119_v1"></script>
 </body>
 

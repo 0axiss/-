@@ -195,12 +195,14 @@ if (remoteDb) {
         if (val !== null && val !== undefined) {
             localStorage.setItem(SYNC_ROOM_SETTINGS_KEY, JSON.stringify(val));
 
-            // 학생 화면 반영 (운영 중지 연습실 즉시 비활성화)
+            // 학생 화면 반영 (운영 중지/이름/구분 표시 변경 즉시 반영)
             if (typeof currentScreen !== "undefined") {
-                if (currentScreen === "room-screen" && typeof renderRooms === "function") {
-                    renderRooms();
+                if (currentScreen === "room-screen" && typeof renderFloorTabsAndRooms === "function") {
+                    renderFloorTabsAndRooms();
                 } else if (currentScreen === "time-screen" && typeof renderSlotsGrid === "function") {
                     renderSlotsGrid();
+                } else if (currentScreen === "overview-screen" && typeof renderOverviewDashboard === "function") {
+                    renderOverviewDashboard();
                 }
             }
 

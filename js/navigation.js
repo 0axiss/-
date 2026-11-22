@@ -532,6 +532,7 @@ function renderOverviewDashboard() {
 
     const dateKey = formatDateKey(overviewDate);
     const activeRes = getActiveReservations(dateKey, overviewBuilding);
+    const dayOpenStatus = checkDailyOpenStatus(dateKey);
 
     const totalRooms = getTotalRoomsInBuilding(b);
     const now = new Date();
@@ -557,7 +558,7 @@ function renderOverviewDashboard() {
         });
     });
 
-    const activeRoomsTotal = Math.max(0, totalRooms - disabledRoomsCount);
+    const activeRoomsTotal = dayOpenStatus.isOpen ? Math.max(0, totalRooms - disabledRoomsCount) : 0;
     const availableNow = Math.max(0, activeRoomsTotal - busyRoomsNow);
     const totalResCount = activeRes.length;
 
@@ -626,6 +627,10 @@ function renderOverviewDashboard() {
 
             if (!isRoomAvailable) {
                 badgeText = "예약 불가";
+                badgeClass = "orc-badge disabled";
+            } else if (!dayOpenStatus.isOpen) {
+                // 일요일 휴관 / 지난 날짜 / 당일 예약 오픈 전·미래 날짜는 예약 불가 표시
+                badgeText = dayOpenStatus.isSunday ? "휴관" : "예약 불가";
                 badgeClass = "orc-badge disabled";
             } else if (isCurrentlyOccupied) {
                 badgeText = "사용중";

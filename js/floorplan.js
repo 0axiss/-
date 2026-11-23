@@ -1,4 +1,4 @@
-/**
+﻿/**
  * CSU Room Reservation - Floor Plan (연습실 약도) Module
  * 약도 이미지가 준비된 층은 image 경로를 채우면 자동으로 표시됩니다. (image: "" → 준비 중)
  */
@@ -6,7 +6,7 @@
 const FLOOR_PLANS = {
     "신관": [
         { floor: "B1", label: "지하 1층", image: "images/floorplan-new-B1.jpg" },
-        { floor: "5F", label: "5층", image: "" },
+        { floor: "5F", label: "5층", image: "images/floorplan-new-5F.jpg" },
         { floor: "6F", label: "6층", image: "" }
     ],
     "종합관": [

@@ -7,7 +7,7 @@ const FLOOR_PLANS = {
     "신관": [
         { floor: "B1", label: "지하 1층", image: "images/floorplan-new-B1.jpg" },
         { floor: "5F", label: "5층", image: "images/floorplan-new-5F.jpg" },
-        { floor: "6F", label: "6층", image: "" }
+        { floor: "6F", label: "6층", image: "images/floorplan-new-6F.jpg" }
     ],
     "종합관": [
         { floor: "2F", label: "2층", image: "" }

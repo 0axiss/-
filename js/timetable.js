@@ -630,7 +630,10 @@ function syncDropdownsWithSelection() {
         endSelect.innerHTML = `<option value="">🔒</option>`;
 
         if (timeSummary) timeSummary.textContent = "🔒";
-        if (statusBadge) statusBadge.textContent = "🔒";
+        if (statusBadge) {
+            statusBadge.style.display = "none";
+            statusBadge.textContent = "🔒";
+        }
         if (summaryBox) summaryBox.classList.remove("error");
         if (reserveBtn) {
             reserveBtn.disabled = true;
@@ -681,14 +684,20 @@ function syncDropdownsWithSelection() {
         const maxSlots = Math.round((policies.maxDurationHours || 2) * 2);
 
         timeSummary.textContent = `${startSlot.startStr} ~ ${endSlot.endStr} (총 ${durText}, ${slotCount}개 슬롯)`;
-        statusBadge.textContent = `${slotCount}/${maxSlots}개 선택`;
+        if (statusBadge) {
+            statusBadge.style.display = "inline-flex";
+            statusBadge.textContent = `${slotCount}/${maxSlots}개 선택`;
+        }
         summaryBox.classList.remove("error");
         reserveBtn.disabled = false;
         const btnSpan = reserveBtn.querySelector(".btn-text");
         if (btnSpan) btnSpan.textContent = "이 시간으로 예약 신청하기";
     } else {
         timeSummary.textContent = "타임테이블에서 원하는 시간 버튼을 터치해주세요";
-        statusBadge.textContent = "시간 미선택";
+        if (statusBadge) {
+            statusBadge.style.display = "none";
+            statusBadge.textContent = "";
+        }
         summaryBox.classList.remove("error");
         reserveBtn.disabled = true;
         const btnSpan = reserveBtn.querySelector(".btn-text");

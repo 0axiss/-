@@ -800,6 +800,7 @@ select {
     font-size: 20px;
     font-weight: 800;
     color: var(--gray-900);
+    white-space: nowrap;
 }
 
 .rci-status-dot {
@@ -807,6 +808,7 @@ select {
     height: 8px;
     border-radius: 50%;
     background: var(--success);
+    flex-shrink: 0;
 }
 
 .rci-status-dot.occupied {
@@ -822,6 +824,7 @@ select {
     background: var(--gray-100);
     color: var(--gray-700);
     margin-bottom: 8px;
+    white-space: nowrap;
 }
 
 .rci-badge.organ {
@@ -850,10 +853,18 @@ select {
     color: var(--gray-500);
     padding-top: 6px;
     border-top: 1px solid var(--gray-100);
+    white-space: nowrap;
+    gap: 4px;
+}
+
+.rci-footer span {
+    white-space: nowrap;
 }
 
 .rci-live-text {
     font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .rci-live-text.avail {
@@ -972,14 +983,16 @@ select {
 .dn-date-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
+    white-space: nowrap;
 }
 
 .dn-date-row strong {
     font-size: 16px;
     font-weight: 800;
     color: var(--gray-900);
+    white-space: nowrap;
 }
 
 .dn-day-badge {
@@ -990,6 +1003,8 @@ select {
     background: var(--primary-bg);
     color: var(--primary);
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .dn-status-badge {
@@ -1004,11 +1019,15 @@ select {
     color: #dc2626;
     border: 1px solid #fecaca;
     letter-spacing: -0.2px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .dn-day-badge.sm {
     font-size: 10px;
     padding: 1px 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .dn-hint {
@@ -1016,6 +1035,7 @@ select {
     font-size: 10.5px;
     color: var(--gray-400);
     margin-top: 2px;
+    white-space: nowrap;
 }
 
 /* Legend */
@@ -1211,12 +1231,17 @@ select {
     font-weight: 700;
     color: var(--gray-800);
     letter-spacing: -0.2px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .tt-slot-subtext {
     font-size: 10.5px;
     color: var(--gray-400);
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .tt-slot-badge {
@@ -2046,9 +2071,18 @@ select {
     color: var(--gray-400);
     font-size: 10px;
     font-weight: 600;
-    padding: 6px 16px;
+    padding: 6px 6px;
     border-radius: 12px;
     transition: all 0.15s ease;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+}
+
+.bnav-item span {
+    white-space: nowrap;
+    font-size: 10.5px;
+    letter-spacing: -0.3px;
 }
 
 .bnav-item svg {
@@ -3096,6 +3130,268 @@ select {
     border-color: var(--primary-light);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     outline: none;
+}
+
+/* =============================================================
+   모바일 스마트폰 UI 특화: 텍스트 줄바꿈 방지 및 한 줄 정렬 최적화
+============================================================= */
+/* 전역 단어 분리 방지: 단어 중간에서 어색하게 뚝 잘려 내려가지 않도록 설정 */
+body, .view-screen, .app-modal {
+    word-break: keep-all;
+}
+
+/* 1. 상단 글로벌 헤더 & 공지 바 */
+.brand-text .univ-tag,
+.brand-text .dept-title {
+    white-space: nowrap;
+}
+.notice-bar {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.notice-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 2. 뷰 상단 내비게이션 바 */
+.nav-subtitle {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.nav-main-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.nav-extra-btn,
+.nav-back-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* 3. 건물 선택 화면 */
+.hero-badge,
+.bcard-title,
+.bcard-count-badge,
+.btn-floorplan-open {
+    white-space: nowrap;
+}
+.bcard-meta {
+    flex-shrink: 0;
+}
+
+/* 4. 층별 탭 및 연습실 목록 카드 */
+.floor-tab-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.floor-group-header,
+.fgh-left,
+.fgh-left h3,
+.fgh-count {
+    white-space: nowrap;
+}
+.fgh-left span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rci-top,
+.rci-number,
+.rci-badge,
+.rci-footer,
+.rci-footer span,
+.rci-live-text {
+    white-space: nowrap;
+}
+.disabled-room .rci-footer {
+    white-space: nowrap;
+    gap: 4px;
+}
+.disabled-room .rci-footer span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 5. 타임테이블 화면 컴포넌트 */
+.rh-tag,
+.rh-name,
+.status-pill {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.rh-info {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.date-navigator-card,
+.dn-date-row,
+.dn-date-row strong,
+.dn-day-badge,
+.dn-status-badge,
+.dn-hint {
+    white-space: nowrap;
+}
+.manual-time-card .mt-header,
+.tp-col label,
+.tp-divider,
+.duration-summary-box,
+.dsb-label,
+.dsb-time,
+.dsb-badge {
+    white-space: nowrap;
+}
+.slot-legend-bar,
+.legend-item {
+    white-space: nowrap;
+}
+.slots-header,
+.slots-header-text h4,
+.slots-guide-text,
+.tt-avail-counter {
+    white-space: nowrap;
+}
+.tt-hour-badge {
+    white-space: nowrap;
+}
+.tt-slot-card,
+.tt-slot-time-row,
+.tt-slot-time,
+.tt-slot-subtext,
+.tt-slot-badge {
+    white-space: nowrap;
+}
+.btn-primary-reserve,
+.btn-primary-reserve .btn-text {
+    white-space: nowrap;
+}
+
+/* 6. 하단 바텀 내비게이션 바 */
+.bottom-nav {
+    overflow: hidden;
+}
+.bottom-nav .bnav-item {
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+}
+.bottom-nav .bnav-item span {
+    white-space: nowrap;
+    letter-spacing: -0.3px;
+}
+
+/* 7. 전체 현황판 대시보드 */
+.segmented-control .seg-btn {
+    white-space: nowrap;
+}
+.overview-stats-row .stat-pill {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.overview-stats-row .stat-pill strong {
+    white-space: nowrap;
+}
+.overview-row-card .orc-info,
+.overview-row-card .orc-room-num,
+.overview-row-card .orc-room-type,
+.overview-row-card .orc-badge {
+    white-space: nowrap;
+}
+
+/* 8. 내 예약 조회 및 취소 화면 */
+.search-card label,
+.search-btn,
+.mrc-header,
+.mrc-room-title,
+.mrc-badge,
+.mrc-row,
+.mrc-row span,
+.btn-card-cancel {
+    white-space: nowrap;
+}
+.mrc-row strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 8px;
+    text-align: right;
+}
+
+/* 9. 연습실 소통 게시판 */
+.board-category-tabs .bcat-btn,
+.bcat-title,
+.bcat-badge,
+.board-sub-bar,
+.bsb-info,
+.bsb-info span,
+.btn-write-inquiry,
+.bpc-header,
+.bpc-date,
+.bpc-bottom-row,
+.bpc-author {
+    white-space: nowrap;
+}
+.bpc-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 10. 모달 팝업 */
+.modal-header .m-sub,
+.modal-header .m-title,
+.res-summary-card .rsc-row,
+.res-summary-card .rsc-label,
+.rules-chip,
+.modal-footer-btns button {
+    white-space: nowrap;
+}
+.res-summary-card .rsc-val {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 8px;
+    text-align: right;
+}
+
+/* 11. 화면 폭이 375px 이하(아이폰 SE 등 소형 스마트폰) 미세 조정 */
+@media (max-width: 375px) {
+    .view-screen {
+        padding: 12px 14px 20px;
+    }
+    .rci-number {
+        font-size: 18px;
+    }
+    .rci-footer {
+        font-size: 10px;
+    }
+    .tt-slot-card {
+        padding: 7px 10px;
+    }
+    .tt-slot-time {
+        font-size: 12px;
+    }
+    .tt-slot-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+    .btn-primary-reserve {
+        font-size: 14px;
+    }
+    .bottom-nav .bnav-item {
+        padding: 5px 3px;
+    }
+    .bottom-nav .bnav-item span {
+        font-size: 9.5px;
+        letter-spacing: -0.5px;
+    }
 }
 
 
